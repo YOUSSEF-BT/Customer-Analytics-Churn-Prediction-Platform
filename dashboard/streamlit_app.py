@@ -236,7 +236,7 @@ try:
     model = joblib.load("model_churn_xgboost.pkl")
     features = joblib.load("model_features.pkl")
 except Exception as e:
-    st.warning(f"⚠️ Modèle non trouvé. Les fonctionnalités de prédiction seront limitées. Erreur: {e}")
+    st.warning("⚠️ Les fonctionnalités de prédiction sont temporairement désactivées pour maintenance.")
     model = None
     features = []
 
