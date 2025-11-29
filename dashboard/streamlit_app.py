@@ -755,13 +755,7 @@ def generate_professional_pdf():
             f"${revenue_potential * churn_pct/100 * 0.3:,.0f} sur base annuelle."
         )
         
-def generate_professional_pdf():
-    """Génère un rapport PDF professionnel avec graphiques"""
-    try:
-        pdf = ProfessionalPDF()
-        # ... (tout le reste du code) ...
-        
-        # SECTION CORRIGÉE :
+        # Génération du buffer PDF
         try:
             pdf_buffer = BytesIO()
             pdf_output = pdf.output(dest='S').encode('latin-1')
@@ -775,6 +769,7 @@ def generate_professional_pdf():
     except Exception as e:
         st.error(f"Erreur lors de la génération du PDF : {str(e)}")
         return None
+
 # -----------------------------
 # SECTION RAPPORTS PROFESSIONNELS
 # -----------------------------
