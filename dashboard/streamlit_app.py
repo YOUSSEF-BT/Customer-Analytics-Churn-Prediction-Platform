@@ -874,7 +874,7 @@ except Exception as e:
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------
-# TABLEAU DES CLIENTS À RISQUE
+# TABLEAU DES CLIENTS À RISQUE - CORRECTION DE L'ERREUR XGBOOST
 # -----------------------------
 st.markdown("""
 <div style='text-align: center; margin: 4rem 0 2rem 0;'>
@@ -891,9 +891,10 @@ if model is not None and len(features) > 0:
         
         X_pred = X_pred[features].fillna(0)
         
-        # CORRECTION : Gérer l'attribut use_label_encoder
-        if hasattr(model, 'use_label_encoder'):
-            model.use_label_encoder = False
+        # CORRECTION : Suppression de la gestion de use_label_encoder qui cause l'erreur
+        # Cette ligne est supprimée car elle n'est plus nécessaire avec les versions récentes de XGBoost
+        # if hasattr(model, 'use_label_encoder'):
+        #    model.use_label_encoder = False
             
         filtered_data['RiskScore'] = model.predict_proba(X_pred)[:,1]
         filtered_data['RiskLevel'] = pd.cut(
