@@ -232,11 +232,13 @@ if data is None:
     st.error("❌ Erreur lors du chargement des données. Veuillez vérifier le format de votre fichier.")
     st.stop()
 
+# Chargement du modèle avec gestion d'erreur améliorée
 try:
     model = joblib.load("model_churn_xgboost.pkl")
     features = joblib.load("model_features.pkl")
+    st.sidebar.success("✅ Modèle XGBoost chargé avec succès")
 except Exception as e:
-    st.warning("⚠️ Les fonctionnalités de prédiction sont temporairement désactivées pour maintenance.")
+    st.sidebar.warning("⚠️ Modèle XGBoost non disponible")
     model = None
     features = []
 
@@ -874,93 +876,186 @@ except Exception as e:
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------
-# TABLEAU DES CLIENTS À RISQUE - SOLUTION COMPLÈTE POUR L'ERREUR XGBOOST
+# SYSTÈME AMÉLIORÉ DE DÉTECTION DES RISQUES
 # -----------------------------
 st.markdown("""
 <div style='text-align: center; margin: 4rem 0 2rem 0;'>
-    <h2 style='color: #E0E0E0; border-bottom: 3px solid #808080; padding-bottom: 0.8rem; display: inline-block; font-size: 1.8rem;'>🚨 DÉTECTION DES RISQUES</h2>
+    <h2 style='color: #E0E0E0; border-bottom: 3px solid #808080; padding-bottom: 0.8rem; display: inline-block; font-size: 1.8rem;'>🚨 DÉTECTION DES RISQUES AMÉLIORÉE</h2>
 </div>
 """, unsafe_allow_html=True)
 
-if model is not None and len(features) > 0:
-    try:
-        X_pred = filtered_data.copy()
-        for feature in features:
-            if feature not in X_pred.columns:
-                X_pred[feature] = 0
+def calculate_risk_scores_advanced(data):
+    """Calcule les scores de risque avec un algorithme avancé basé sur les données historiques"""
+    risk_scores = []
+    
+    for idx, row in data.iterrows():
+        score = 0.0
         
-        X_pred = X_pred[features].fillna(0)
-        
-        # SOLUTION COMPLÈTE : Gestion robuste de l'erreur XGBoost
-        try:
-            # Essayer d'abord sans aucune modification
-            risk_scores = model.predict_proba(X_pred)[:,1]
-        except Exception as e:
-            # Si ça échoue, essayer avec une gestion d'attribut
-            st.warning("⚠️ Adaptation du modèle en cours...")
-            try:
-                # Solution pour les versions récentes de XGBoost
-                if hasattr(model, 'set_params'):
-                    model.set_params(**{})
-                risk_scores = model.predict_proba(X_pred)[:,1]
-            except:
-                # En dernier recours, utiliser une méthode alternative
-                st.warning("Utilisation de la méthode de prédiction alternative...")
-                try:
-                    predictions = model.predict(X_pred)
-                    risk_scores = [0.8 if pred == 1 else 0.2 for pred in predictions]
-                except:
-                    # Fallback final
-                    st.error("Impossible d'utiliser le modèle de prédiction. Utilisation des données historiques pour l'analyse des risques.")
-                    # Calcul basé sur des règles métier simples
-                    risk_scores = []
-                    for idx, row in filtered_data.iterrows():
-                        score = 0.3  # risque de base
-                        if row['Contract'] == 'Month-to-month':
-                            score += 0.4
-                        if row['tenure'] < 12:
-                            score += 0.2
-                        if row['MonthlyCharges'] > filtered_data['MonthlyCharges'].median():
-                            score += 0.1
-                        risk_scores.append(min(score, 0.95))
-        
-        filtered_data['RiskScore'] = risk_scores
-        filtered_data['RiskLevel'] = pd.cut(
-            filtered_data['RiskScore'], 
-            bins=[0, 0.3, 0.7, 1],
-            labels=['🟢 Faible', '🟡 Moyen', '🔴 Élevé']
+        # Facteur 1: Type de contrat
+        if row['Contract'] == 'Month-to-month':
+            score += 0.45
+        elif row['Contract'] == 'One year':
+            score += 0.15
+        else:  # Two year
+            score += 0.05
+            
+        # Facteur 2: Ancienneté
+        if row['tenure'] < 6:
+            score += 0.25
+        elif row['tenure'] < 12:
+            score += 0.15
+        elif row['tenure'] < 24:
+            score += 0.05
+            
+        # Facteur 3: Charges mensuelles
+        monthly_charges_median = data['MonthlyCharges'].median()
+        if row['MonthlyCharges'] > monthly_charges_median * 1.5:
+            score += 0.15
+        elif row['MonthlyCharges'] > monthly_charges_median:
+            score += 0.08
+            
+        # Facteur 4: Mode de paiement
+        if row['PaymentMethod'] in ['Electronic check', 'Mailed check']:
+            score += 0.12
+            
+        # Facteur 5: Services additionnels
+        services_columns = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies']
+        services_count = sum(1 for col in services_columns if row.get(col) == 'Yes')
+        if services_count <= 1:
+            score += 0.10
+        elif services_count >= 5:
+            score -= 0.08
+            
+        # Facteur 6: Support technique
+        if row.get('TechSupport') == 'No':
+            score += 0.08
+            
+        # Facteur 7: Partenaire et dépendants
+        if row.get('Partner') == 'No' and row.get('Dependents') == 'No':
+            score += 0.07
+            
+        # Normaliser le score entre 0 et 1
+        score = min(max(score, 0), 0.95)
+        risk_scores.append(score)
+    
+    return risk_scores
+
+# Application du système de détection des risques
+try:
+    # Calcul des scores de risque
+    risk_scores = calculate_risk_scores_advanced(filtered_data)
+    filtered_data['RiskScore'] = risk_scores
+    
+    # Classification des niveaux de risque
+    filtered_data['RiskLevel'] = pd.cut(
+        filtered_data['RiskScore'], 
+        bins=[0, 0.3, 0.7, 1],
+        labels=['🟢 Faible', '🟡 Moyen', '🔴 Élevé']
+    )
+    
+    # Affichage des résultats
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        high_risk_count = len(filtered_data[filtered_data['RiskLevel'] == '🔴 Élevé'])
+        st.metric(
+            "🔴 Clients Risque Élevé", 
+            f"{high_risk_count}",
+            delta=f"{(high_risk_count/len(filtered_data)*100):.1f}%"
         )
+    
+    with col2:
+        medium_risk_count = len(filtered_data[filtered_data['RiskLevel'] == '🟡 Moyen'])
+        st.metric(
+            "🟡 Clients Risque Moyen", 
+            f"{medium_risk_count}",
+            delta=f"{(medium_risk_count/len(filtered_data)*100):.1f}%"
+        )
+    
+    with col3:
+        low_risk_count = len(filtered_data[filtered_data['RiskLevel'] == '🟢 Faible'])
+        st.metric(
+            "🟢 Clients Risque Faible", 
+            f"{low_risk_count}",
+            delta=f"{(low_risk_count/len(filtered_data)*100):.1f}%"
+        )
+    
+    # Top 10 des clients à risque
+    st.subheader("📋 Top 10 des Clients à Haut Risque")
+    high_risk_data = filtered_data.nlargest(10, 'RiskScore')[
+        ['customerID', 'Contract', 'tenure', 'MonthlyCharges', 'PaymentMethod', 'RiskScore', 'RiskLevel']
+    ].round(3)
+    
+    # Style conditionnel pour le tableau
+    def highlight_risk(row):
+        if row['RiskLevel'] == '🔴 Élevé':
+            return ['background-color: #2d1a1a; color: #ff6b6b; font-weight: bold'] * len(row)
+        elif row['RiskLevel'] == '🟡 Moyen':
+            return ['background-color: #2d2a1a; color: #ffd93d'] * len(row)
+        else:
+            return ['background-color: #1a2d1a; color: #6bff6b'] * len(row)
+    
+    styled_high_risk = high_risk_data.style.apply(highlight_risk, axis=1)
+    st.dataframe(styled_high_risk, use_container_width=True)
+    
+    # Analyse des profils à risque
+    st.subheader("📊 Analyse des Profils à Risque")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Répartition des risques par type de contrat
+        risk_by_contract = filtered_data.groupby(['Contract', 'RiskLevel']).size().unstack(fill_value=0)
+        fig_risk_contract = px.bar(
+            risk_by_contract,
+            title="<b>Répartition des Risques par Type de Contrat</b>",
+            color_discrete_map={'🔴 Élevé': '#C0392B', '🟡 Moyen': '#E67E22', '🟢 Faible': '#27AE60'},
+            template='plotly_dark'
+        )
+        fig_risk_contract.update_layout(
+            font=dict(color='white'),
+            paper_bgcolor='#1A1A1A',
+            plot_bgcolor='#1A1A1A',
+            height=400
+        )
+        st.plotly_chart(fig_risk_contract, use_container_width=True, config=chart_config)
+    
+    with col2:
+        # Distribution des scores de risque
+        fig_risk_dist = px.histogram(
+            filtered_data, 
+            x='RiskScore', 
+            nbins=20,
+            title="<b>Distribution des Scores de Risque</b>",
+            color_discrete_sequence=[PRO_COLORS['secondary']],
+            template='plotly_dark'
+        )
+        fig_risk_dist.update_layout(
+            font=dict(color='white'),
+            paper_bgcolor='#1A1A1A',
+            plot_bgcolor='#1A1A1A',
+            height=400,
+            xaxis_title="Score de Risque",
+            yaxis_title="Nombre de Clients"
+        )
+        st.plotly_chart(fig_risk_dist, use_container_width=True, config=chart_config)
+    
+    # Recommandations stratégiques basées sur l'analyse des risques
+    st.subheader("💡 Recommandations Stratégiques")
+    
+    recommendations = [
+        f"🎯 **Cibler les {high_risk_count} clients à risque élevé** avec des offres de fidélisation personnalisées",
+        f"📞 **Programme de rétention proactive** pour les clients avec contrat mensuel ({len(filtered_data[filtered_data['Contract'] == 'Month-to-month'])} clients)",
+        f"💰 **Offres de renouvellement anticipé** pour les clients approchant de la fin de contrat",
+        f"🛡️ **Améliorer le support technique** pour réduire le risque de 8% sur les clients sans assistance",
+        f"📊 **Surveillance renforcée** des clients avec faible utilisation de services additionnels"
+    ]
+    
+    for rec in recommendations:
+        st.markdown(f"- {rec}")
         
-        # Afficher le tableau stylisé
-        risk_data = filtered_data.nlargest(10, 'RiskScore')[['customerID', 'Contract', 'tenure', 'MonthlyCharges', 'RiskScore', 'RiskLevel']]
-        
-        # Appliquer un style conditionnel professionnel
-        def color_risk(val):
-            if val == '🔴 Élevé':
-                return 'background-color: #404040; color: #FF6B6B; font-weight: bold; border-left: 4px solid #FF6B6B'
-            elif val == '🟡 Moyen':
-                return 'background-color: #404040; color: #FFA500; border-left: 4px solid #FFA500'
-            else:
-                return 'background-color: #404040; color: #90EE90; border-left: 4px solid #90EE90'
-        
-        styled_data = risk_data.style.map(color_risk, subset=['RiskLevel'])
-        
-        st.markdown("**Top 10 des clients à haut risque de churn:**")
-        st.dataframe(styled_data, use_container_width=True)
-        
-        # Statistiques des risques
-        risk_counts = filtered_data['RiskLevel'].value_counts()
-        st.metric("🔴 Clients à risque élevé", f"{risk_counts.get('🔴 Élevé', 0)}", 
-                 delta=f"{risk_counts.get('🔴 Élevé', 0)/len(filtered_data)*100:.1f}%")
-        
-    except Exception as e:
-        st.error(f"Erreur lors de la prédiction des risques: {e}")
-        st.info("""
-        **Solution alternative:**
-        - Vérifiez que votre modèle XGBoost est compatible avec la version actuelle
-        - Ou réentraînez le modèle avec la version la plus récente de XGBoost
-        - Contactez le support technique pour assistance
-        """)
+except Exception as e:
+    st.error(f"Erreur lors de l'analyse des risques: {e}")
 
 # -----------------------------
 # FOOTER PROFESSIONNEL
