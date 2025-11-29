@@ -755,21 +755,26 @@ def generate_professional_pdf():
             f"${revenue_potential * churn_pct/100 * 0.3:,.0f} sur base annuelle."
         )
         
-        try:
-    # CORRECTION : Méthode alternative pour BytesIO
-    pdf_buffer = BytesIO()
-    pdf_output = pdf.output(dest='S').encode('latin-1')
-    pdf_buffer.write(pdf_output)
-    pdf_buffer.seek(0)
-    return pdf_buffer
-except Exception as e:
-    st.error(f"Erreur lors de la génération du PDF: {e}")
-    return None
+def generate_professional_pdf():
+    """Génère un rapport PDF professionnel avec graphiques"""
+    try:
+        pdf = ProfessionalPDF()
+        # ... (tout le reste du code) ...
         
+        # SECTION CORRIGÉE :
+        try:
+            pdf_buffer = BytesIO()
+            pdf_output = pdf.output(dest='S').encode('latin-1')
+            pdf_buffer.write(pdf_output)
+            pdf_buffer.seek(0)
+            return pdf_buffer
+        except Exception as e:
+            st.error(f"Erreur lors de la génération du PDF: {e}")
+            return None
+            
     except Exception as e:
         st.error(f"Erreur lors de la génération du PDF : {str(e)}")
         return None
-
 # -----------------------------
 # SECTION RAPPORTS PROFESSIONNELS
 # -----------------------------
