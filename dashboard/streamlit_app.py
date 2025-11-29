@@ -402,69 +402,6 @@ with col2:
     )
     st.plotly_chart(fig_contract, use_container_width=True, config=chart_config)
 
-# -----------------------------
-# GRAPHIQUE ANIMÉ
-# -----------------------------
-st.markdown("""
-<div style='text-align: center; margin: 4rem 0 2rem 0;'>
-    <h2 style='color: #E0E0E0; border-bottom: 3px solid #606060; padding-bottom: 0.8rem; display: inline-block; font-size: 1.8rem;'>🎬 ÉVOLUTION TEMPORELLE</h2>
-</div>
-""", unsafe_allow_html=True)
-
-# Préparer les données pour l'animation
-animation_data = filtered_data.groupby(['tenure_group_label', 'Contract', 'Churn']).size().reset_index(name='Count')
-animation_data['Total'] = animation_data.groupby(['tenure_group_label', 'Contract'])['Count'].transform('sum')
-animation_data['Percentage'] = (animation_data['Count'] / animation_data['Total'] * 100).round(1)
-
-# Graphique animé
-fig_animated = px.bar(
-    animation_data[animation_data['Churn'] == 'Yes'],
-    x='Contract',
-    y='Percentage',
-    color='Contract',
-    animation_frame='tenure_group_label',
-    title="<b>🎬 ÉVOLUTION DU TAUX DE CHURN PAR CONTRAT</b>",
-    range_y=[0, animation_data['Percentage'].max() * 1.1],
-    color_discrete_sequence=[PRO_COLORS['primary'], PRO_COLORS['secondary'], PRO_COLORS['light']],
-    template='plotly_dark'
-)
-
-fig_animated.update_layout(
-    font=dict(color='white'),
-    paper_bgcolor='#1A1A1A',
-    plot_bgcolor='#1A1A1A',
-    height=500,
-    xaxis_title="Type de Contrat",
-    yaxis_title="Taux de Churn (%)",
-    xaxis=dict(tickfont=dict(color='white')),
-    yaxis=dict(tickfont=dict(color='white')),
-    showlegend=False
-)
-
-# Personnaliser les boutons de l'animation
-fig_animated.update_layout(
-    updatemenus=[{
-        "type": "buttons",
-        "direction": "left",
-        "x": 0.1,
-        "y": 0,
-        "buttons": [
-            {
-                "args": [None, {"frame": {"duration": 1000, "redraw": True}, "fromcurrent": True}],
-                "label": "▶️ Lecture",
-                "method": "animate"
-            },
-            {
-                "args": [[None], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate", "transition": {"duration": 0}}],
-                "label": "⏸️ Pause",
-                "method": "animate"
-            }
-        ]
-    }]
-)
-
-st.plotly_chart(fig_animated, use_container_width=True, config=chart_config)
-
 # Graphique 3: Distribution de l'ancienneté
 fig_tenure = px.histogram(
     filtered_data, 
@@ -667,7 +604,6 @@ def generate_professional_pdf():
         pdf.ln(5)
         
         # Graphique 2: Churn par contrat
-        pdf.add_page()
         pdf.set_font('Arial', 'B', 12)
         pdf.set_text_color(46, 90, 136)
         pdf.cell(0, 8, 'Analyse du Churn par Type de Contrat', 0, 1, 'L')
@@ -874,6 +810,65 @@ if st.button("🖨️ GÉNÉRER LE RAPPORT PDF AVEC GRAPHIQUES", key="generate_p
 
 st.markdown("</div>", unsafe_allow_html=True)
 
+# Section Export Données - UNIQUEMENT EXCEL (même si l'upload accepte CSV et Excel)
+st.markdown("""
+<div class="export-section">
+    <h3 style='color: #FFFFFF; margin-bottom: 1.5rem;'>💾 EXPORT DES DONNÉES EXCEL</h3>
+    <p style='color: #CCCCCC; margin-bottom: 1.5rem;'>Téléchargez les données analysées au format Excel professionnel</p>
+""", unsafe_allow_html=True)
+
+# Bouton Excel uniquement (même si l'upload accepte CSV)
+try:
+    excel_buffer = BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+        # Données principales
+        filtered_data.to_excel(writer, index=False, sheet_name='Donnees_Analyse')
+        
+        # Indicateurs KPIs
+        kpis_df = pd.DataFrame({
+            "KPI": ["Portefeuille Clients", "Churn Total", "Clients Fidèles", "Taux Churn", "Ancienneté Moyenne", "Revenu Annuel Estimé"],
+            "Valeur": [total_clients, total_churn, total_loyal, f"{churn_pct:.1f}%", f"{avg_tenure:.1f} mois", f"${revenue_potential:,.0f}"]
+        })
+        kpis_df.to_excel(writer, index=False, sheet_name='Indicateurs_KPIs')
+        
+        # Analyse par contrat
+        contract_analysis = filtered_data.groupby('Contract').agg({
+            'Churn': lambda x: (x == 'Yes').sum(),
+            'customerID': 'count',
+            'MonthlyCharges': 'mean',
+            'tenure': 'mean'
+        }).round(2)
+        contract_analysis.columns = ['Clients_Churn', 'Total_Clients', 'Charges_Mensuelles_Moy', 'Anciennete_Moyenne']
+        contract_analysis['Taux_Churn'] = (contract_analysis['Clients_Churn'] / contract_analysis['Total_Clients'] * 100).round(1)
+        contract_analysis.to_excel(writer, sheet_name='Analyse_Contrats')
+    
+    excel_buffer.seek(0)
+    
+    st.download_button(
+        label="📗 TÉLÉCHARGER LE RAPPORT EXCEL COMPLET",
+        data=excel_buffer,
+        file_name=f"rapport_analytique_excel_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+        key="excel_download"
+    )
+    
+    st.markdown("""
+    <div style='background: #2A2A2A; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #404040;'>
+        <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>📋 Contenu du fichier Excel:</h4>
+        <ul style='color: #CCCCCC; text-align: left; margin: 0;'>
+            <li><strong>Donnees_Analyse:</strong> Données complètes analysées</li>
+            <li><strong>Indicateurs_KPIs:</strong> Tableau de bord avec indicateurs clés</li>
+            <li><strong>Analyse_Contrats:</strong> Analyse détaillée par type de contrat</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+except Exception as e:
+    st.error(f"❌ Erreur lors de la génération du fichier Excel: {e}")
+
+st.markdown("</div>", unsafe_allow_html=True)
+
 # -----------------------------
 # FOOTER PROFESSIONNEL
 # -----------------------------
@@ -883,3 +878,53 @@ st.markdown("""
     <p style='color: #CCCCCC; margin: 0.8rem 0 0 0; font-size: 1rem;'>Dashboard Professionnel d'Analyse Stratégique • Powered by Advanced Analytics</p>
 </div>
 """, unsafe_allow_html=True)
+
+# -----------------------------
+# INFORMATIONS SIDEBAR
+# -----------------------------
+st.sidebar.markdown("""
+<div style='background: linear-gradient(135deg, #404040, #606060); padding: 1.2rem; border-radius: 10px; margin-top: 2rem; border: 1px solid #666666;'>
+    <h4 style='color: #FFFFFF; text-align: center; margin: 0; font-size: 1.1rem;'>📊 SNAPSHOT</h4>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown(f"""
+<div style='background: #2A2A2A; padding: 1rem; border-radius: 8px; margin: 0.5rem 0; text-align: center; border: 1px solid #404040;'>
+    <div style='color: #CCCCCC; font-size: 0.9rem;'>Portefeuille Clients</div>
+    <div style='color: #FFFFFF; font-size: 1.4rem; font-weight: bold;'>{total_clients:,}</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown(f"""
+<div style='background: #2A2A2A; padding: 1rem; border-radius: 8px; margin: 0.5rem 0; text-align: center; border: 1px solid #404040;'>
+    <div style='color: #CCCCCC; font-size: 0.9rem;'>Taux de Churn</div>
+    <div style='color: #FFFFFF; font-size: 1.4rem; font-weight: bold;'>{churn_pct:.1f}%</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown(f"""
+<div style='background: #2A2A2A; padding: 1rem; border-radius: 8px; margin: 0.5rem 0; text-align: center; border: 1px solid #404040;'>
+    <div style='color: #CCCCCC; font-size: 0.9rem;'>Fidélité Moyenne</div>
+    <div style='color: #FFFFFF; font-size: 1.4rem; font-weight: bold;'>{avg_tenure:.1f} mois</div>
+</div>
+""", unsafe_allow_html=True)
+
+with st.sidebar.expander("ℹ️ GUIDE UTILISATION"):
+    st.markdown("""
+    <div style='color: #E0E0E0;'>
+    **Fonctionnalités:**
+    - Filtrage avancé des données
+    - Analyse visuelle en temps réel
+    - Détection proactive des risques
+    - Export professionnel des rapports
+    
+    **Optimisation:**
+    - Utilisez les filtres pour cibler l'analyse
+    - Exportez les rapports pour partage
+    - Surveillez les indicateurs clés
+    
+    **Support:**
+    - Documentation complète disponible
+    - Support technique dédié
+    </div>
+    """, unsafe_allow_html=True)
