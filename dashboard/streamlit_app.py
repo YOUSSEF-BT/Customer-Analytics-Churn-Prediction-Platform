@@ -627,7 +627,7 @@ def generate_professional_pdf():
         pdf.cell(0, 20, 'RAPPORT ANALYTIQUE PROFESSIONNEL', 0, 1, 'C')
         pdf.set_font('Arial', 'I', 14)
         pdf.set_text_color(100, 100, 100)
-        pdf.cell(0, 15, 'Analyse du Churn Client', 0, 1, 'C')
+        pdf.cell(0, 15, 'Analyse du Churn Client - Dashboard Stratégique', 0, 1, 'C')
         pdf.ln(10)
         
         # Section 1: Résumé exécutif
