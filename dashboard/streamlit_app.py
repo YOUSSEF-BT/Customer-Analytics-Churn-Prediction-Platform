@@ -755,10 +755,16 @@ def generate_professional_pdf():
             f"${revenue_potential * churn_pct/100 * 0.3:,.0f} sur base annuelle."
         )
         
-        pdf_buffer = BytesIO()
-        pdf.output(pdf_buffer)
-        pdf_buffer.seek(0)
-        return pdf_buffer
+        try:
+    # CORRECTION : Méthode alternative pour BytesIO
+    pdf_buffer = BytesIO()
+    pdf_output = pdf.output(dest='S').encode('latin-1')
+    pdf_buffer.write(pdf_output)
+    pdf_buffer.seek(0)
+    return pdf_buffer
+except Exception as e:
+    st.error(f"Erreur lors de la génération du PDF: {e}")
+    return None
         
     except Exception as e:
         st.error(f"Erreur lors de la génération du PDF : {str(e)}")
@@ -884,6 +890,11 @@ if model is not None and len(features) > 0:
                 X_pred[feature] = 0
         
         X_pred = X_pred[features].fillna(0)
+        
+        # CORRECTION : Gérer l'attribut use_label_encoder
+        if hasattr(model, 'use_label_encoder'):
+            model.use_label_encoder = False
+            
         filtered_data['RiskScore'] = model.predict_proba(X_pred)[:,1]
         filtered_data['RiskLevel'] = pd.cut(
             filtered_data['RiskScore'], 
@@ -907,7 +918,7 @@ if model is not None and len(features) > 0:
         st.dataframe(styled_data, use_container_width=True)
         
     except Exception as e:
-        st.error(f"Erreur prédiction: {e}")
+        st.error(f"Erreur lors de la prédiction des risques: {e}")
 
 # -----------------------------
 # FOOTER PROFESSIONNEL
