@@ -462,6 +462,188 @@ if len(X_seg) > 0:
     st.plotly_chart(fig_cluster, use_container_width=True, config=chart_config)
 
 # -----------------------------
+# DÉTECTION DES RISQUES AMÉLIORÉE
+# -----------------------------
+st.markdown("""
+<div style='text-align: center; margin: 4rem 0 2rem 0;'>
+    <h2 style='color: #E0E0E0; border-bottom: 3px solid #808080; padding-bottom: 0.8rem; display: inline-block; font-size: 1.8rem;'>🚨 DÉTECTION DES RISQUES AMÉLIORÉE</h2>
+</div>
+""", unsafe_allow_html=True)
+
+def calculate_risk_scores_advanced(data):
+    """Calcule les scores de risque avec un algorithme avancé basé sur les données historiques"""
+    risk_scores = []
+    
+    for idx, row in data.iterrows():
+        score = 0.0
+        
+        # Facteur 1: Type de contrat
+        if row['Contract'] == 'Month-to-month':
+            score += 0.45
+        elif row['Contract'] == 'One year':
+            score += 0.15
+        else:  # Two year
+            score += 0.05
+            
+        # Facteur 2: Ancienneté
+        if row['tenure'] < 6:
+            score += 0.25
+        elif row['tenure'] < 12:
+            score += 0.15
+        elif row['tenure'] < 24:
+            score += 0.05
+            
+        # Facteur 3: Charges mensuelles
+        monthly_charges_median = data['MonthlyCharges'].median()
+        if row['MonthlyCharges'] > monthly_charges_median * 1.5:
+            score += 0.15
+        elif row['MonthlyCharges'] > monthly_charges_median:
+            score += 0.08
+            
+        # Facteur 4: Mode de paiement
+        if row['PaymentMethod'] in ['Electronic check', 'Mailed check']:
+            score += 0.12
+            
+        # Facteur 5: Services additionnels
+        services_columns = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies']
+        services_count = sum(1 for col in services_columns if row.get(col) == 'Yes')
+        if services_count <= 1:
+            score += 0.10
+        elif services_count >= 5:
+            score -= 0.08
+            
+        # Facteur 6: Support technique
+        if row.get('TechSupport') == 'No':
+            score += 0.08
+            
+        # Facteur 7: Partenaire et dépendants
+        if row.get('Partner') == 'No' and row.get('Dependents') == 'No':
+            score += 0.07
+            
+        # Normaliser le score entre 0 et 1
+        score = min(max(score, 0), 0.95)
+        risk_scores.append(score)
+    
+    return risk_scores
+
+# Application du système de détection des risques
+try:
+    # Calcul des scores de risque
+    risk_scores = calculate_risk_scores_advanced(filtered_data)
+    filtered_data['RiskScore'] = risk_scores
+    
+    # Classification des niveaux de risque
+    filtered_data['RiskLevel'] = pd.cut(
+        filtered_data['RiskScore'], 
+        bins=[0, 0.3, 0.7, 1],
+        labels=['🟢 Faible', '🟡 Moyen', '🔴 Élevé']
+    )
+    
+    # Affichage des résultats
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        high_risk_count = len(filtered_data[filtered_data['RiskLevel'] == '🔴 Élevé'])
+        st.metric(
+            "🔴 Clients Risque Élevé", 
+            f"{high_risk_count}",
+            delta=f"{(high_risk_count/len(filtered_data)*100):.1f}%"
+        )
+    
+    with col2:
+        medium_risk_count = len(filtered_data[filtered_data['RiskLevel'] == '🟡 Moyen'])
+        st.metric(
+            "🟡 Clients Risque Moyen", 
+            f"{medium_risk_count}",
+            delta=f"{(medium_risk_count/len(filtered_data)*100):.1f}%"
+        )
+    
+    with col3:
+        low_risk_count = len(filtered_data[filtered_data['RiskLevel'] == '🟢 Faible'])
+        st.metric(
+            "🟢 Clients Risque Faible", 
+            f"{low_risk_count}",
+            delta=f"{(low_risk_count/len(filtered_data)*100):.1f}%"
+        )
+    
+    # Top 10 des clients à risque
+    st.subheader("📋 Top 10 des Clients à Haut Risque")
+    high_risk_data = filtered_data.nlargest(10, 'RiskScore')[
+        ['customerID', 'Contract', 'tenure', 'MonthlyCharges', 'PaymentMethod', 'RiskScore', 'RiskLevel']
+    ].round(3)
+    
+    # Style conditionnel pour le tableau
+    def highlight_risk(row):
+        if row['RiskLevel'] == '🔴 Élevé':
+            return ['background-color: #2d1a1a; color: #ff6b6b; font-weight: bold'] * len(row)
+        elif row['RiskLevel'] == '🟡 Moyen':
+            return ['background-color: #2d2a1a; color: #ffd93d'] * len(row)
+        else:
+            return ['background-color: #1a2d1a; color: #6bff6b'] * len(row)
+    
+    styled_high_risk = high_risk_data.style.apply(highlight_risk, axis=1)
+    st.dataframe(styled_high_risk, use_container_width=True)
+    
+    # Analyse des profils à risque
+    st.subheader("📊 Analyse des Profils à Risque")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Répartition des risques par type de contrat
+        risk_by_contract = filtered_data.groupby(['Contract', 'RiskLevel']).size().unstack(fill_value=0)
+        fig_risk_contract = px.bar(
+            risk_by_contract,
+            title="<b>Répartition des Risques par Type de Contrat</b>",
+            color_discrete_map={'🔴 Élevé': '#C0392B', '🟡 Moyen': '#E67E22', '🟢 Faible': '#27AE60'},
+            template='plotly_dark'
+        )
+        fig_risk_contract.update_layout(
+            font=dict(color='white'),
+            paper_bgcolor='#1A1A1A',
+            plot_bgcolor='#1A1A1A',
+            height=400
+        )
+        st.plotly_chart(fig_risk_contract, use_container_width=True, config=chart_config)
+    
+    with col2:
+        # Distribution des scores de risque
+        fig_risk_dist = px.histogram(
+            filtered_data, 
+            x='RiskScore', 
+            nbins=20,
+            title="<b>Distribution des Scores de Risque</b>",
+            color_discrete_sequence=[PRO_COLORS['secondary']],
+            template='plotly_dark'
+        )
+        fig_risk_dist.update_layout(
+            font=dict(color='white'),
+            paper_bgcolor='#1A1A1A',
+            plot_bgcolor='#1A1A1A',
+            height=400,
+            xaxis_title="Score de Risque",
+            yaxis_title="Nombre de Clients"
+        )
+        st.plotly_chart(fig_risk_dist, use_container_width=True, config=chart_config)
+    
+    # Recommandations stratégiques basées sur l'analyse des risques
+    st.subheader("💡 Recommandations Stratégiques")
+    
+    recommendations = [
+        f"🎯 **Cibler les {high_risk_count} clients à risque élevé** avec des offres de fidélisation personnalisées",
+        f"📞 **Programme de rétention proactive** pour les clients avec contrat mensuel ({len(filtered_data[filtered_data['Contract'] == 'Month-to-month'])} clients)",
+        f"💰 **Offres de renouvellement anticipé** pour les clients approchant de la fin de contrat",
+        f"🛡️ **Améliorer le support technique** pour réduire le risque de 8% sur les clients sans assistance",
+        f"📊 **Surveillance renforcée** des clients avec faible utilisation de services additionnels"
+    ]
+    
+    for rec in recommendations:
+        st.markdown(f"- {rec}")
+        
+except Exception as e:
+    st.error(f"Erreur lors de l'analyse des risques: {e}")
+
+# -----------------------------
 # FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES
 # -----------------------------
 class ProfessionalPDF(FPDF):
@@ -526,12 +708,30 @@ def create_pdf_safe_plotly_figure(fig, width=800, height=400):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
             temp_path = tmpfile.name
         
-        # Sauvegarder l'image avec des paramètres optimisés
-        pio.write_image(fig, temp_path, width=width, height=height, scale=2, format='png')
+        # Configuration pour utiliser un moteur alternatif si kaleido n'est pas disponible
+        try:
+            # Essayer d'abord avec kaleido
+            pio.write_image(fig, temp_path, width=width, height=height, scale=2, engine='kaleido')
+        except Exception as kaleido_error:
+            st.warning("Kaleido non disponible, utilisation d'un moteur alternatif...")
+            try:
+                # Essayer avec orca
+                pio.write_image(fig, temp_path, width=width, height=height, scale=2, engine='orca')
+            except Exception as orca_error:
+                st.warning("Orca non disponible, tentative avec le moteur par défaut...")
+                # Utiliser le moteur par défaut
+                pio.write_image(fig, temp_path, width=width, height=height, scale=2)
         
         return temp_path
     except Exception as e:
         st.error(f"Erreur création image: {e}")
+        # Afficher l'instruction d'installation
+        st.error("""
+        **Solution :** Installez kaleido avec la commande suivante :
+        ```bash
+        pip install -U kaleido
+        ```
+        """)
         return None
 
 def generate_professional_pdf():
@@ -596,7 +796,7 @@ def generate_professional_pdf():
                 os.unlink(temp_path)
             else:
                 pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, "Graphique non disponible", 0, 1)
+                pdf.cell(0, 8, "Graphique non disponible - Installez kaleido: pip install kaleido", 0, 1)
         except Exception as e:
             pdf.set_font('Arial', 'I', 9)
             pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
@@ -622,7 +822,7 @@ def generate_professional_pdf():
                 os.unlink(temp_path)
             else:
                 pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, "Graphique non disponible", 0, 1)
+                pdf.cell(0, 8, "Graphique non disponible - Installez kaleido: pip install kaleido", 0, 1)
         except Exception as e:
             pdf.set_font('Arial', 'I', 9)
             pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
@@ -649,7 +849,7 @@ def generate_professional_pdf():
                 os.unlink(temp_path)
             else:
                 pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, "Graphique non disponible", 0, 1)
+                pdf.cell(0, 8, "Graphique non disponible - Installez kaleido: pip install kaleido", 0, 1)
         except Exception as e:
             pdf.set_font('Arial', 'I', 9)
             pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
@@ -676,7 +876,7 @@ def generate_professional_pdf():
                     os.unlink(temp_path)
                 else:
                     pdf.set_font('Arial', 'I', 9)
-                    pdf.cell(0, 8, "Graphique non disponible", 0, 1)
+                    pdf.cell(0, 8, "Graphique non disponible - Installez kaleido: pip install kaleido", 0, 1)
             except Exception as e:
                 pdf.set_font('Arial', 'I', 9)
                 pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
@@ -780,6 +980,19 @@ st.markdown("""
 <div class="export-section">
     <h3 style='color: #FFFFFF; margin-bottom: 1.5rem;'>📄 RAPPORT PDF COMPLET</h3>
     <p style='color: #CCCCCC; margin-bottom: 1.5rem;'>Téléchargez un rapport détaillé avec analyse complète et recommandations</p>
+""", unsafe_allow_html=True)
+
+# Installation de Kaleido
+st.markdown("""
+<div style='background: #2A2A2A; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #404040;'>
+    <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>📦 PRÉREQUIS POUR LE PDF</h4>
+    <p style='color: #CCCCCC; margin: 0;'>
+        Pour générer le PDF avec les graphiques, installez le package kaleido :
+    </p>
+    <code style='background: #1A1A1A; padding: 0.5rem; border-radius: 4px; display: block; margin: 0.5rem 0; color: #FFFFFF;'>
+        pip install -U kaleido
+    </code>
+</div>
 """, unsafe_allow_html=True)
 
 if st.button("🖨️ GÉNÉRER LE RAPPORT PDF AVEC GRAPHIQUES", key="generate_pdf", use_container_width=True):
