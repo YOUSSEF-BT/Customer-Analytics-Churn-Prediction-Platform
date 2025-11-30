@@ -785,6 +785,7 @@ class ProfessionalPDF(FPDF):
         self.ln(3)
 
 # --- FONCTION MODIFIÉE (PREND LES GRAPHIQUES EN ARGUMENT) ---
+
 # --- FONCTION MODIFIÉE (PREND LES GRAPHIQUES EN ARGUMENT) ---
 def generate_professional_pdf(fig_churn, fig_contract, fig_tenure, fig_cluster, fig_risk_contract, fig_risk_dist, high_risk_data):
     try:
@@ -824,18 +825,16 @@ def generate_professional_pdf(fig_churn, fig_contract, fig_tenure, fig_cluster, 
         pdf.set_font(pdf.default_font, '', 12)
         pdf.set_text_color(80, 80, 80) # Gris moyen
 
-        # Colonne de gauche
+        # Colonne de gauche (Date uniquement)
         pdf.set_x(30)
         pdf.cell(80, 8, f"Date: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, 'L')
-        pdf.cell(80, 8, "Periode d'analyse: Q1 2023", 0, 1, 'L')
+        # La ligne "Periode d'analyse" a été supprimée ici
 
-        # Colonne de droite
-        pdf.set_x(120)
+        # Bloc "PREPARE POUR:" centré
+        pdf.set_y(pdf.get_y() + 10) # Descendre un peu pour l'espacement
         pdf.set_font(pdf.default_font, 'B', 12)
-        pdf.cell(0, 8, "PREPARE POUR:", 0, 1, 'L')
-        pdf.set_font(pdf.default_font, '', 12)
-        pdf.cell(0, 8, "Direction de la Clientele", 0, 1, 'L')
-        pdf.cell(0, 8, "Departement Marketing & Ventes", 0, 1, 'L')
+        # Utilisation de multi_cell pour centrer tout le bloc
+        pdf.multi_cell(0, 8, "PREPARE POUR:\nDirection de la Clientele\nDepartement Marketing & Ventes", 0, 'C')
 
         # Pied de page
         pdf.set_y(260)
