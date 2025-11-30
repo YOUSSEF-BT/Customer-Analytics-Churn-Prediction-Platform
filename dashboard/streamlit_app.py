@@ -725,13 +725,6 @@ def create_pdf_safe_plotly_figure(fig, width=800, height=400):
         return temp_path
     except Exception as e:
         st.error(f"Erreur création image: {e}")
-        # Afficher l'instruction d'installation
-        st.error("""
-        **Solution :** Installez kaleido avec la commande suivante :
-        ```bash
-        pip install -U kaleido
-        ```
-        """)
         return None
 
 def generate_professional_pdf():
@@ -796,7 +789,7 @@ def generate_professional_pdf():
                 os.unlink(temp_path)
             else:
                 pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, "Graphique non disponible - Installez kaleido: pip install kaleido", 0, 1)
+                pdf.cell(0, 8, "Graphique non disponible", 0, 1)
         except Exception as e:
             pdf.set_font('Arial', 'I', 9)
             pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
@@ -822,7 +815,7 @@ def generate_professional_pdf():
                 os.unlink(temp_path)
             else:
                 pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, "Graphique non disponible - Installez kaleido: pip install kaleido", 0, 1)
+                pdf.cell(0, 8, "Graphique non disponible", 0, 1)
         except Exception as e:
             pdf.set_font('Arial', 'I', 9)
             pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
@@ -849,7 +842,7 @@ def generate_professional_pdf():
                 os.unlink(temp_path)
             else:
                 pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, "Graphique non disponible - Installez kaleido: pip install kaleido", 0, 1)
+                pdf.cell(0, 8, "Graphique non disponible", 0, 1)
         except Exception as e:
             pdf.set_font('Arial', 'I', 9)
             pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
@@ -876,7 +869,7 @@ def generate_professional_pdf():
                     os.unlink(temp_path)
                 else:
                     pdf.set_font('Arial', 'I', 9)
-                    pdf.cell(0, 8, "Graphique non disponible - Installez kaleido: pip install kaleido", 0, 1)
+                    pdf.cell(0, 8, "Graphique non disponible", 0, 1)
             except Exception as e:
                 pdf.set_font('Arial', 'I', 9)
                 pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
@@ -982,18 +975,29 @@ st.markdown("""
     <p style='color: #CCCCCC; margin-bottom: 1.5rem;'>Téléchargez un rapport détaillé avec analyse complète et recommandations</p>
 """, unsafe_allow_html=True)
 
-# Installation de Kaleido
-st.markdown("""
-<div style='background: #2A2A2A; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #404040;'>
-    <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>📦 PRÉREQUIS POUR LE PDF</h4>
-    <p style='color: #CCCCCC; margin: 0;'>
-        Pour générer le PDF avec les graphiques, installez le package kaleido :
-    </p>
-    <code style='background: #1A1A1A; padding: 0.5rem; border-radius: 4px; display: block; margin: 0.5rem 0; color: #FFFFFF;'>
-        pip install -U kaleido
-    </code>
-</div>
-""", unsafe_allow_html=True)
+# Vérification de Kaleido - MODIFICATION ICI
+try:
+    import kaleido
+    st.markdown("""
+    <div style='background: #1a2d1a; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #27AE60;'>
+        <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>✅ KALEIDO INSTALLÉ</h4>
+        <p style='color: #CCCCCC; margin: 0;'>
+            Le package Kaleido est correctement installé. L'export PDF avec graphiques est disponible.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+except ImportError:
+    st.markdown("""
+    <div style='background: #2A2A2A; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #404040;'>
+        <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>📦 PRÉREQUIS POUR LE PDF</h4>
+        <p style='color: #CCCCCC; margin: 0;'>
+            Pour générer le PDF avec les graphiques, installez le package kaleido :
+        </p>
+        <code style='background: #1A1A1A; padding: 0.5rem; border-radius: 4px; display: block; margin: 0.5rem 0; color: #FFFFFF;'>
+            pip install -U kaleido
+        </code>
+    </div>
+    """, unsafe_allow_html=True)
 
 if st.button("🖨️ GÉNÉRER LE RAPPORT PDF AVEC GRAPHIQUES", key="generate_pdf", use_container_width=True):
     with st.spinner("📊 Génération du rapport professionnel..."):
