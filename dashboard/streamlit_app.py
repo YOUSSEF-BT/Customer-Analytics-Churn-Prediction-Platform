@@ -646,217 +646,140 @@ except Exception as e:
 # -----------------------------
 # FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES
 # -----------------------------
-class ProfessionalPDF(FPDF):
+class ProfessionalPDFEnhanced(FPDF):
     def __init__(self):
         super().__init__()
         self.set_auto_page_break(auto=True, margin=15)
         self.company_name = "Customer Analytics & Churn Prediction Platform"
-    
+
     def header(self):
-        # Logo ou titre en haut de page
         self.set_font('Arial', 'B', 16)
         self.set_fill_color(46, 90, 136)  # Bleu royal
         self.set_text_color(255, 255, 255)
         self.cell(0, 10, self.company_name, 0, 1, 'C', True)
         self.ln(5)
-    
+
     def footer(self):
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
         self.set_text_color(128, 128, 128)
         self.cell(0, 10, f'Page {self.page_no()} - Généré le {datetime.now().strftime("%d/%m/%Y à %H:%M")}', 0, 0, 'C')
-    
+
     def add_section_title(self, title):
         self.set_font('Arial', 'B', 14)
         self.set_text_color(46, 90, 136)  # Bleu royal
         self.set_fill_color(240, 240, 240)
         self.cell(0, 10, title, 0, 1, 'L', True)
-        self.ln(5)
-    
+        self.ln(3)
+
     def add_subsection_title(self, title):
         self.set_font('Arial', 'B', 12)
         self.set_text_color(0, 0, 0)
         self.cell(0, 8, title, 0, 1, 'L')
-        self.ln(3)
-    
-    def add_kpi_table(self, data):
+        self.ln(2)
+
+    def add_kpi_table(self, kpi_list):
         self.set_font('Arial', 'B', 11)
-        # En-tête du tableau
-        self.set_fill_color(46, 90, 136)  # Bleu royal
+        self.set_fill_color(46, 90, 136)
         self.set_text_color(255, 255, 255)
         self.cell(100, 8, 'INDICATEUR', 1, 0, 'C', True)
         self.cell(50, 8, 'VALEUR', 1, 1, 'C', True)
         
-        # Données du tableau
         self.set_font('Arial', '', 10)
         self.set_text_color(0, 0, 0)
         fill = False
-        for kpi, value in data:
-            if fill:
-                self.set_fill_color(245, 245, 245)
-            else:
-                self.set_fill_color(255, 255, 255)
+        for kpi, value in kpi_list:
+            self.set_fill_color(245, 245, 245) if fill else self.set_fill_color(255, 255, 255)
             self.cell(100, 8, kpi, 1, 0, 'L', fill)
             self.cell(50, 8, str(value), 1, 1, 'C', fill)
             fill = not fill
         self.ln(5)
 
-def create_pdf_safe_plotly_figure(fig):
-    try:
-        tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
-        fig.write_image(tmp_file.name, scale=2)
-        return tmp_file.name
-    except Exception as e:
-        print(f"Erreur création image figure: {e}")
-        return None
-
-# ---------------------
-# Génération PDF professionnel
-# ---------------------
-def generate_professional_pdf(
-        total_clients, churn_pct, avg_tenure, revenue_potential,
-        high_risk_data,
-        fig_churn, fig_contract, fig_tenure,
-        fig_cluster, fig_risk_contract, fig_risk_dist):
-
-    file_path = "rapport_call_center_professionnel.pdf"
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
+def generate_professional_pdf_enhanced():
+    file_path = "rapport_call_center_pro.pdf"
+    pdf = ProfessionalPDFEnhanced()
 
     # ---------------- PAGE DE GARDE ----------------
     pdf.add_page()
-    pdf.set_font("Arial", "B", 22)
-    pdf.cell(0, 20, "CALL CENTER ANALYTICS REPORT", ln=True, align="C")
+    pdf.set_font("Arial", "B", 24)
+    pdf.cell(0, 25, "CALL CENTER ANALYTICS REPORT", ln=True, align="C")
     pdf.set_font("Arial", "", 14)
     pdf.cell(0, 10, "Customer Churn & Risk Detection Platform", ln=True, align="C")
-    pdf.ln(15)
+    pdf.ln(10)
     pdf.cell(0, 10, f"Date : {datetime.now().strftime('%d/%m/%Y')}", ln=True, align="C")
-
-    # ---------------- RÉSUMÉ ----------------
+    
+    # ---------------- RÉSUMÉ EXECUTIF ----------------
     pdf.add_page()
-    pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "1. Résumé Exécutif", ln=True)
+    pdf.add_section_title("1. Résumé Exécutif")
     pdf.set_font("Arial", "", 12)
     pdf.multi_cell(0, 8,
-        f"Total clients : {total_clients}\n"
-        f"Taux de churn : {churn_pct:.2f}%\n"
-        f"Ancienneté moyenne : {avg_tenure:.1f} mois\n"
-        f"Revenu annuel estimé : ${revenue_potential:,.0f}"
+        f"- Total clients : {total_clients}\n"
+        f"- Taux de churn : {churn_pct:.2f}%\n"
+        f"- Ancienneté moyenne : {avg_tenure:.1f} mois\n"
+        f"- Revenu annuel estimé : ${revenue_potential:,.0f}\n"
     )
+    pdf.add_kpi_table([
+        ("Portefeuille Clients", total_clients),
+        ("Churn Total", total_churn),
+        ("Clients Fidèles", total_loyal),
+        ("Taux Churn", f"{churn_pct:.1f}%"),
+        ("Ancienneté Moyenne", f"{avg_tenure:.1f} mois"),
+        ("Revenu Annuel Estimé", f"${revenue_potential:,.0f}")
+    ])
 
-    # ---------------- ANALYSE VISUELLE STRATÉGIQUE ----------------
+    # ---------------- GRAPHIQUES ----------------
     pdf.add_page()
-    pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "2. Analyse Visuelle Stratégique", ln=True)
-
+    pdf.add_section_title("2. Analyse Churn et Ancienneté")
     for fig in [fig_churn, fig_contract, fig_tenure]:
         img = create_pdf_safe_plotly_figure(fig)
         if img:
             pdf.image(img, w=180)
             os.remove(img)
-            pdf.ln(8)
+            pdf.ln(5)
 
-    # ---------------- SEGMENTATION AVANCÉE ----------------
+    # ---------------- SEGMENTATION ----------------
     pdf.add_page()
-    pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "3. Segmentation Avancée", ln=True)
-    pdf.set_font("Arial", "", 12)
-
+    pdf.add_section_title("3. Segmentation Clients")
     img = create_pdf_safe_plotly_figure(fig_cluster)
     if img:
         pdf.image(img, w=180)
         os.remove(img)
-        pdf.ln(8)
-
-    # ---------------- TOP 10 DES CLIENTS À HAUT RISQUE ----------------
+    
+    # ---------------- DÉTECTION DES RISQUES ----------------
     pdf.add_page()
-    pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "4. Top 10 des Clients à Haut Risque", ln=True)
-    pdf.set_font("Arial", "", 12)
-    pdf.ln(5)
-    for i, row in high_risk_data.head(10).iterrows():
-        pdf.multi_cell(0, 7,
-            f"{i+1}. ID: {row['customerID']} | Contrat: {row['Contract']} | "
-            f"Charges: ${row['MonthlyCharges']} | Ancienneté: {row['tenure']} mois | "
-            f"Score: {row['RiskScore']}"
-        )
-
-    # ---------------- ANALYSE DES PROFILS À RISQUE ----------------
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "5. Analyse des Profils à Risque", ln=True)
-    pdf.set_font("Arial", "", 12)
-
+    pdf.add_section_title("4. Détection des Risques")
     for fig in [fig_risk_contract, fig_risk_dist]:
         img = create_pdf_safe_plotly_figure(fig)
         if img:
             pdf.image(img, w=180)
             os.remove(img)
-            pdf.ln(8)
+            pdf.ln(5)
 
+    # ---------------- TOP 10 RISQUE ----------------
+    pdf.add_page()
+    pdf.add_section_title("5. Top 10 Clients à Haut Risque")
+    pdf.set_font("Arial", "", 11)
+    for _, row in high_risk_data.iterrows():
+        pdf.multi_cell(0, 7,
+            f"- ID: {row['customerID']} | Contrat: {row['Contract']} | "
+            f"Charges: {row['MonthlyCharges']} | Ancienneté: {row['tenure']} | "
+            f"Score: {row['RiskScore']}"
+        )
+    
     # ---------------- CONCLUSION & RECOMMANDATIONS ----------------
     pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "6. Conclusion & Recommandations", ln=True)
+    pdf.add_section_title("6. Conclusion & Recommandations")
     pdf.set_font("Arial", "", 12)
     pdf.multi_cell(0, 8,
-        "- Prioriser le suivi des contrats mensuels pour réduire le churn\n"
-        "- Mettre en place une stratégie de fidélisation proactive pour les profils à risque\n"
-        "- Surveiller les indicateurs prédictifs pour anticiper les risques"
+        "1. Suivi prioritaire des contrats mensuels\n"
+        "2. Fidélisation proactive des clients à risque élevé\n"
+        "3. Amélioration du support technique pour réduire le churn\n"
+        "4. Analyse continue des services additionnels\n"
+        "5. Surveillance prédictive et actions correctives"
     )
 
     pdf.output(file_path)
     return file_path
-
-# -----------------------------
-# SECTION RAPPORTS PROFESSIONNELS
-# -----------------------------
-st.markdown("""
-<div style='text-align: center; margin: 4rem 0 2rem 0;'>
-    <h2 style='color: #E0E0E0; border-bottom: 3px solid #808080; padding-bottom: 0.8rem; display: inline-block; font-size: 1.8rem;'>📋 EXPORT PROFESSIONNEL</h2>
-</div>
-""", unsafe_allow_html=True)
-
-# Section PDF
-st.markdown("""
-<div class="export-section">
-    <h3 style='color: #FFFFFF; margin-bottom: 1.5rem;'>📄 RAPPORT PDF COMPLET</h3>
-    <p style='color: #CCCCCC; margin-bottom: 1.5rem;'>Téléchargez un rapport détaillé avec analyse complète et recommandations</p>
-""", unsafe_allow_html=True)
-
-if st.button("🖨️ GÉNÉRER LE RAPPORT PDF AVEC GRAPHIQUES", key="generate_pdf", use_container_width=True):
-    with st.spinner("📊 Génération du rapport professionnel..."):
-        # Générer le PDF
-        pdf_path = generate_professional_pdf()
-        
-        try:
-            # Lire le PDF en binaire
-            with open(pdf_path, "rb") as f:
-                pdf_bytes = f.read()
-            
-            st.success("✅ Rapport PDF généré avec succès!")
-            st.info("""
-            **📋 Contenu du rapport:**
-            - 🎯 Résumé exécutif et indicateurs clés
-            - 📊 4 graphiques d'analyse professionnels
-            - 🚨 Analyse des risques et segmentation
-            - 💡 Recommandations stratégiques actionnables
-            - 🎯 Perspectives et objectifs mesurables
-            """)
-            
-            # Bouton de téléchargement correct
-            st.download_button(
-                label="📥 TÉLÉCHARGER LE RAPPORT PDF COMPLET",
-                data=pdf_bytes,
-                file_name=f"rapport_analytique_complet_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                mime="application/pdf",
-                use_container_width=True,
-                key="pdf_download"
-            )
-        except Exception as e:
-            st.error(f"❌ Erreur lors de l'ouverture du PDF: {e}")
-
-st.markdown("</div>", unsafe_allow_html=True)
 
 # Section Export Données - UNIQUEMENT EXCEL (même si l'upload accepte CSV et Excel)
 st.markdown("""
