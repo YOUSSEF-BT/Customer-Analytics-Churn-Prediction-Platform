@@ -644,7 +644,7 @@ except Exception as e:
     st.error(f"Erreur lors de l'analyse des risques: {e}")
 
 # -----------------------------
-# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES
+# FONCTION POUR GÉNÉRER UN PDF ULTRA-PROFESSIONNEL
 # -----------------------------
 class ProfessionalPDFEnhanced(FPDF):
     def __init__(self):
@@ -780,6 +780,7 @@ def generate_professional_pdf_enhanced():
 
     pdf.output(file_path)
     return file_path
+
 
 # Section Export Données - UNIQUEMENT EXCEL (même si l'upload accepte CSV et Excel)
 st.markdown("""
