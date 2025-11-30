@@ -132,7 +132,7 @@ st.markdown("""
     
     /* Download buttons */
     .stDownloadButton>button {
-        background: linear-gradient(45deg, #505050, #707070) !important;
+        background: linear-gradient(45deg, #505050, #706060) !important;
         color: white !important;
         border: 1px solid #666666 !important;
         width: 100%;
@@ -536,32 +536,32 @@ try:
     filtered_data['RiskLevel'] = pd.cut(
         filtered_data['RiskScore'], 
         bins=[0, 0.3, 0.7, 1],
-        labels=['🟢 Faible', '🟡 Moyen', '🔴 Élevé']
+        labels=['Faible', 'Moyen', 'Elevé']
     )
     
     # Affichage des résultats
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        high_risk_count = len(filtered_data[filtered_data['RiskLevel'] == '🔴 Élevé'])
+        high_risk_count = len(filtered_data[filtered_data['RiskLevel'] == 'Elevé'])
         st.metric(
-            "🔴 Clients Risque Élevé", 
+            "Clients Risque Élevé", 
             f"{high_risk_count}",
             delta=f"{(high_risk_count/len(filtered_data)*100):.1f}%"
         )
     
     with col2:
-        medium_risk_count = len(filtered_data[filtered_data['RiskLevel'] == '🟡 Moyen'])
+        medium_risk_count = len(filtered_data[filtered_data['RiskLevel'] == 'Moyen'])
         st.metric(
-            "🟡 Clients Risque Moyen", 
+            "Clients Risque Moyen", 
             f"{medium_risk_count}",
             delta=f"{(medium_risk_count/len(filtered_data)*100):.1f}%"
         )
     
     with col3:
-        low_risk_count = len(filtered_data[filtered_data['RiskLevel'] == '🟢 Faible'])
+        low_risk_count = len(filtered_data[filtered_data['RiskLevel'] == 'Faible'])
         st.metric(
-            "🟢 Clients Risque Faible", 
+            "Clients Risque Faible", 
             f"{low_risk_count}",
             delta=f"{(low_risk_count/len(filtered_data)*100):.1f}%"
         )
@@ -574,9 +574,9 @@ try:
     
     # Style conditionnel pour le tableau
     def highlight_risk(row):
-        if row['RiskLevel'] == '🔴 Élevé':
+        if row['RiskLevel'] == 'Elevé':
             return ['background-color: #2d1a1a; color: #ff6b6b; font-weight: bold'] * len(row)
-        elif row['RiskLevel'] == '🟡 Moyen':
+        elif row['RiskLevel'] == 'Moyen':
             return ['background-color: #2d2a1a; color: #ffd93d'] * len(row)
         else:
             return ['background-color: #1a2d1a; color: #6bff6b'] * len(row)
@@ -595,7 +595,7 @@ try:
         fig_risk_contract = px.bar(
             risk_by_contract,
             title="<b>Répartition des Risques par Type de Contrat</b>",
-            color_discrete_map={'🔴 Élevé': '#C0392B', '🟡 Moyen': '#E67E22', '🟢 Faible': '#27AE60'},
+            color_discrete_map={'Elevé': '#C0392B', 'Moyen': '#E67E22', 'Faible': '#27AE60'},
             template='plotly_dark'
         )
         fig_risk_contract.update_layout(
@@ -630,11 +630,11 @@ try:
     st.subheader("💡 Recommandations Stratégiques")
     
     recommendations = [
-        f"🎯 **Cibler les {high_risk_count} clients à risque élevé** avec des offres de fidélisation personnalisées",
-        f"📞 **Programme de rétention proactive** pour les clients avec contrat mensuel ({len(filtered_data[filtered_data['Contract'] == 'Month-to-month'])} clients)",
-        f"💰 **Offres de renouvellement anticipé** pour les clients approchant de la fin de contrat",
-        f"🛡️ **Améliorer le support technique** pour réduire le risque de 8% sur les clients sans assistance",
-        f"📊 **Surveillance renforcée** des clients avec faible utilisation de services additionnels"
+        f"Cibler les {high_risk_count} clients à risque élevé avec des offres de fidélisation personnalisées",
+        f"Programme de rétention proactive pour les clients avec contrat mensuel ({len(filtered_data[filtered_data['Contract'] == 'Month-to-month'])} clients)",
+        f"Offres de renouvellement anticipé pour les clients approchant de la fin de contrat",
+        f"Améliorer le support technique pour réduire le risque de 8% sur les clients sans assistance",
+        f"Surveillance renforcée des clients avec faible utilisation de services additionnels"
     ]
     
     for rec in recommendations:
@@ -644,7 +644,7 @@ except Exception as e:
     st.error(f"Erreur lors de l'analyse des risques: {e}")
 
 # -----------------------------
-# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES - VERSION AMÉLIORÉE
+# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES - VERSION CORRIGÉE
 # -----------------------------
 class ProfessionalPDF(FPDF):
     def __init__(self):
@@ -666,7 +666,7 @@ class ProfessionalPDF(FPDF):
         self.cell(0, 10, self.company_name, 0, 1, 'C')
         
         self.set_font('Arial', 'I', 10)
-        self.cell(0, 5, "Rapport d'Analyse Stratégique", 0, 1, 'C')
+        self.cell(0, 5, "Rapport d'Analyse Strategique", 0, 1, 'C')
         
         self.ln(10)
     
@@ -678,7 +678,7 @@ class ProfessionalPDF(FPDF):
         
         self.set_font('Arial', 'I', 8)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 10, f'Page {self.page_no()} - Généré le {datetime.now().strftime("%d/%m/%Y à %H:%M")}', 0, 0, 'C')
+        self.cell(0, 10, f'Page {self.page_no()} - Genere le {datetime.now().strftime("%d/%m/%Y a %H:%M")}', 0, 0, 'C')
     
     def chapter_title(self, title, color=None):
         if color is None:
@@ -697,9 +697,11 @@ class ProfessionalPDF(FPDF):
         self.ln(3)
     
     def body_text(self, text):
+        # Nettoyer le texte pour éviter les problèmes d'encodage
+        clean_text = text.replace('•', '-').replace('→', '->').replace('←', '<-').replace('↑', '^').replace('↓', 'v')
         self.set_font('Arial', '', 11)
         self.set_text_color(0, 0, 0)
-        self.multi_cell(0, 6, text)
+        self.multi_cell(0, 6, clean_text)
         self.ln(5)
     
     def kpi_table(self, data):
@@ -715,12 +717,16 @@ class ProfessionalPDF(FPDF):
         self.set_text_color(0, 0, 0)
         fill = False
         for kpi, value in data:
+            # Nettoyer les valeurs pour éviter les problèmes d'encodage
+            clean_kpi = kpi.replace('é', 'e').replace('è', 'e').replace('ê', 'e').replace('à', 'a').replace('â', 'a')
+            clean_value = str(value).replace('€', 'EUR').replace('£', 'GBP').replace('¥', 'JPY')
+            
             if fill:
                 self.set_fill_color(245, 245, 245)
             else:
                 self.set_fill_color(255, 255, 255)
-            self.cell(100, 8, kpi, 1, 0, 'L', fill)
-            self.cell(50, 8, str(value), 1, 1, 'C', fill)
+            self.cell(100, 8, clean_kpi, 1, 0, 'L', fill)
+            self.cell(50, 8, clean_value, 1, 1, 'C', fill)
             fill = not fill
         self.ln(5)
     
@@ -731,7 +737,7 @@ class ProfessionalPDF(FPDF):
         self.set_text_color(0, 0, 0)
         self.cell(30, 8, 'ID Client', 1, 0, 'C', True)
         self.cell(35, 8, 'Contrat', 1, 0, 'C', True)
-        self.cell(20, 8, 'Ancienneté', 1, 0, 'C', True)
+        self.cell(20, 8, 'Anciennete', 1, 0, 'C', True)
         self.cell(25, 8, 'Charges', 1, 0, 'C', True)
         self.cell(25, 8, 'Score Risque', 1, 0, 'C', True)
         self.cell(25, 8, 'Niveau', 1, 1, 'C', True)
@@ -746,21 +752,21 @@ class ProfessionalPDF(FPDF):
             else:
                 self.set_fill_color(255, 255, 255)
             
-            self.cell(30, 8, row['customerID'], 1, 0, 'L', fill)
-            self.cell(35, 8, row['Contract'], 1, 0, 'L', fill)
+            self.cell(30, 8, str(row['customerID']), 1, 0, 'L', fill)
+            self.cell(35, 8, str(row['Contract']), 1, 0, 'L', fill)
             self.cell(20, 8, str(row['tenure']), 1, 0, 'C', fill)
             self.cell(25, 8, f"${row['MonthlyCharges']:.2f}", 1, 0, 'C', fill)
             self.cell(25, 8, f"{row['RiskScore']:.3f}", 1, 0, 'C', fill)
             
             # Coloration selon le niveau de risque
-            if '🔴' in row['RiskLevel']:
+            if 'Elevé' in row['RiskLevel']:
                 self.set_text_color(192, 57, 43)  # Rouge
-            elif '🟡' in row['RiskLevel']:
+            elif 'Moyen' in row['RiskLevel']:
                 self.set_text_color(230, 126, 34)  # Orange
             else:
                 self.set_text_color(39, 174, 96)  # Vert
                 
-            self.cell(25, 8, row['RiskLevel'], 1, 1, 'C', fill)
+            self.cell(25, 8, str(row['RiskLevel']), 1, 1, 'C', fill)
             self.set_text_color(0, 0, 0)  # Remise en noir
             
             fill = not fill
@@ -787,9 +793,10 @@ class ProfessionalPDF(FPDF):
             
             # Ajouter la description
             if description:
+                clean_desc = description.replace('•', '-').replace('→', '->').replace('←', '<-')
                 self.set_font('Arial', 'I', 9)
                 self.set_text_color(100, 100, 100)
-                self.multi_cell(0, 5, description)
+                self.multi_cell(0, 5, clean_desc)
             
             self.ln(5)
             
@@ -816,7 +823,7 @@ def generate_professional_pdf():
         # Logo ou titre principal
         pdf.set_font('Arial', 'B', 28)
         pdf.set_text_color(255, 255, 255)
-        pdf.cell(0, 30, "RAPPORT D'ANALYSE STRATÉGIQUE", 0, 1, 'C')
+        pdf.cell(0, 30, "RAPPORT D'ANALYSE STRATEGIQUE", 0, 1, 'C')
         
         # Sous-titre
         pdf.set_font('Arial', 'I', 18)
@@ -827,7 +834,7 @@ def generate_professional_pdf():
         pdf.set_font('Arial', '', 14)
         pdf.set_text_color(255, 255, 255)
         pdf.cell(0, 10, f"Date: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, 'C')
-        pdf.cell(0, 10, f"Période d'analyse: Q1 2023", 0, 1, 'C')
+        pdf.cell(0, 10, f"Periode d'analyse: Q1 2023", 0, 1, 'C')
         
         # Ligne de séparation
         pdf.set_draw_color(*pdf.secondary_color)
@@ -837,45 +844,45 @@ def generate_professional_pdf():
         # Informations sur l'entreprise
         pdf.set_font('Arial', 'B', 16)
         pdf.set_text_color(255, 255, 255)
-        pdf.cell(0, 20, "Préparé pour:", 0, 1, 'L')
+        pdf.cell(0, 20, "Prepare pour:", 0, 1, 'L')
         pdf.set_font('Arial', '', 14)
-        pdf.cell(0, 10, "Direction de la Clientèle", 0, 1, 'L')
-        pdf.cell(0, 10, "Département Marketing & Ventes", 0, 1, 'L')
+        pdf.cell(0, 10, "Direction de la Clientele", 0, 1, 'L')
+        pdf.cell(0, 10, "Departement Marketing & Ventes", 0, 1, 'L')
         
         # Pied de page
         pdf.set_y(270)
         pdf.set_font('Arial', 'I', 10)
         pdf.set_text_color(200, 200, 200)
-        pdf.cell(0, 10, "Document confidentiel - Propriété exclusive", 0, 0, 'C')
+        pdf.cell(0, 10, "Document confidentiel - Propriete exclusive", 0, 0, 'C')
         
         # ---------------- RÉSUMÉ EXÉCUTIF ----------------
         pdf.add_page()
-        pdf.chapter_title("1. RÉSUMÉ EXÉCUTIF")
+        pdf.chapter_title("1. RESUME EXECUTIF")
         
         pdf.section_title("Vue d'ensemble")
         pdf.body_text(
-            f"Ce rapport présente une analyse complète de {total_clients:,} clients avec un taux de churn de {churn_pct:.1f}%. "
-            f"L'analyse identifie les tendances clés, les segments à risque et propose des recommandations stratégiques "
-            f"pour optimiser la rétention client et maximiser la valeur à long terme."
+            f"Ce rapport presente une analyse complete de {total_clients:,} clients avec un taux de churn de {churn_pct:.1f}%. "
+            f"L'analyse identifie les tendances cles, les segments a risque et propose des recommandations strategiques "
+            f"pour optimiser la retention client et maximiser la valeur a long terme."
         )
         
-        pdf.section_title("Points clés")
+        pdf.section_title("Points cles")
         pdf.body_text(
-            f"• Le portefeuille clients génère un revenu annuel estimé de ${revenue_potential:,.0f}\n"
-            f"• {total_churn:,} clients ont quitté le service durant la période analysée\n"
-            f"• L'ancienneté moyenne est de {avg_tenure:.1f} mois, indiquant une fidélité moyenne\n"
-            f"• Les contrats mensuels présentent le risque de churn le plus élevé"
+            f"- Le portefeuille clients genere un revenu annuel estime de ${revenue_potential:,.0f}\n"
+            f"- {total_churn:,} clients ont quitte le service durant la periode analysee\n"
+            f"- L'anciennete moyenne est de {avg_tenure:.1f} mois, indiquant une fidelite moyenne\n"
+            f"- Les contrats mensuels presentent le risque de churn le plus eleve"
         )
         
-        pdf.section_title("Indicateurs clés de performance")
+        pdf.section_title("Indicateurs cles de performance")
         kpis_data = [
             ('Portefeuille Clients', f"{total_clients:,}"),
             ('Clients en Churn', f"{total_churn:,}"),
-            ('Clients Fidèles', f"{total_loyal:,}"),
+            ('Clients Fideles', f"{total_loyal:,}"),
             ('Taux de Churn', f"{churn_pct:.1f}%"),
-            ('Ancienneté Moyenne', f"{avg_tenure:.1f} mois"),
-            ('Revenu Annuel Estimé', f"${revenue_potential:,.0f}"),
-            ('Charges Mensuelles Moy.', f"${avg_monthly_charges:.2f}")
+            ('Anciennete Moyenne', f"{avg_tenure:.1f} mois"),
+            ('Revenu Annuel Estime', f"${revenue_potential:,.0f}"),
+            ('Charges Mensuelles Moy', f"${avg_monthly_charges:.2f}")
         ]
         pdf.kpi_table(kpis_data)
         
@@ -883,137 +890,137 @@ def generate_professional_pdf():
         pdf.add_page()
         pdf.chapter_title("2. ANALYSE APPROFONDIE DU CHURN")
         
-        pdf.section_title("Répartition du Churn")
+        pdf.section_title("Repartition du Churn")
         pdf.add_plotly_image(
             fig_churn, 
-            'Répartition Churn vs Fidélité',
-            f"Le graphique montre que {churn_pct:.1f}% des clients ont quitté le service, tandis que {100-churn_pct:.1f}% sont restés fidèles."
+            'Repartition Churn vs Fidelite',
+            f"Le graphique montre que {churn_pct:.1f}% des clients ont quitte le service, tandis que {100-churn_pct:.1f}% sont restes fideles."
         )
         
         pdf.section_title("Analyse par Type de Contrat")
         pdf.add_plotly_image(
             fig_contract,
             'Analyse du Churn par Type de Contrat',
-            "Répartition du churn selon les différents types de contrat proposés aux clients. Les contrats mensuels présentent le risque le plus élevé."
+            "Repartition du churn selon les differents types de contrat proposes aux clients. Les contrats mensuels presentent le risque le plus eleve."
         )
         
-        pdf.section_title("Distribution de l'Ancienneté")
+        pdf.section_title("Distribution de l'Anciennete")
         pdf.add_plotly_image(
             fig_tenure,
-            "Distribution de l'Ancienneté des Clients",
-            f"L'ancienneté moyenne des clients est de {avg_tenure:.1f} mois, indiquant la durée moyenne de fidélité. Les pics de churn sont visibles à certaines périodes clés."
+            "Distribution de l'Anciennete des Clients",
+            f"L'anciennete moyenne des clients est de {avg_tenure:.1f} mois, indiquant la duree moyenne de fidelite. Les pics de churn sont visibles a certaines periodes cles."
         )
         
         # ---------------- SEGMENTATION CLIENT ----------------
         pdf.add_page()
-        pdf.chapter_title("3. SEGMENTATION STRATÉGIQUE")
+        pdf.chapter_title("3. SEGMENTATION STRATEGIQUE")
         
         pdf.section_title("Matrice de Segmentation")
         pdf.add_plotly_image(
             fig_cluster,
-            'Segmentation Clients - Charges vs Ancienneté',
-            "Analyse de segmentation permettant d'identifier différents profils clients basés sur leurs charges et ancienneté. Chaque cluster représente un segment distinct avec des caractéristiques spécifiques."
+            'Segmentation Clients - Charges vs Anciennete',
+            "Analyse de segmentation permettant d'identifier differents profils clients bases sur leurs charges et anciennete. Chaque cluster represente un segment distinct avec des caracteristiques specifiques."
         )
         
-        pdf.section_title("Profils Identifiés")
+        pdf.section_title("Profils Identifies")
         pdf.body_text(
-            "• Cluster 0: Clients récents avec charges faibles à moyennes\n"
-            "• Cluster 1: Clients établis avec charges moyennes\n"
-            "• Cluster 2: Clients de longue date avec charges élevées\n"
-            "• Cluster 3: Clients avec charges très élevées, fidélité variable"
+            "- Cluster 0: Clients recents avec charges faibles a moyennes\n"
+            "- Cluster 1: Clients etablis avec charges moyennes\n"
+            "- Cluster 2: Clients de longue date avec charges elevees\n"
+            "- Cluster 3: Clients avec charges tres elevees, fidelite variable"
         )
         
         # ---------------- ANALYSE DES RISQUES ----------------
         pdf.add_page()
-        pdf.chapter_title("4. DÉTECTION PRÉDICTIVE DES RISQUES")
+        pdf.chapter_title("4. DETECTION PREDICTIVE DES RISQUES")
         
-        pdf.section_title("Répartition des Risques par Type de Contrat")
+        pdf.section_title("Repartition des Risques par Type de Contrat")
         pdf.add_plotly_image(
             fig_risk_contract,
-            'Répartition des Risques par Type de Contrat',
-            "Visualisation de la distribution des niveaux de risque selon les types de contrat. Les contrats mensuels concentrent la majorité des risques élevés."
+            'Repartition des Risques par Type de Contrat',
+            "Visualisation de la distribution des niveaux de risque selon les types de contrat. Les contrats mensuels concentrent la majorite des risques eleves."
         )
         
         pdf.section_title("Distribution des Scores de Risque")
         pdf.add_plotly_image(
             fig_risk_dist,
             "Distribution des Scores de Risque",
-            "Histogramme montrant la distribution des scores de risque calculés par notre algorithme prédictif. La queue droite représente les clients à haut risque."
+            "Histogramme montrant la distribution des scores de risque calcules par notre algorithme predictif. La queue droite represente les clients a haut risque."
         )
         
-        pdf.section_title("Top 10 Clients à Haut Risque")
+        pdf.section_title("Top 10 Clients a Haut Risque")
         pdf.risk_table(high_risk_data)
         
-        # ---------------- RECOMMANDATIONS STRATÉGIQUES ----------------
+        # ---------------- RECOMMANDATIONS STRATEGIQUES ----------------
         pdf.add_page()
-        pdf.chapter_title("5. RECOMMANDATIONS STRATÉGIQUES")
+        pdf.chapter_title("5. RECOMMANDATIONS STRATEGIQUES")
         
         pdf.section_title("Actions Prioritaires")
         pdf.body_text(
-            f"1. Cibler les {len(filtered_data[filtered_data['RiskLevel'] == '🔴 Élevé'])} clients à risque élevé avec des offres de fidélisation personnalisées\n"
-            f"2. Mettre en place un programme de rétention proactive pour les clients avec contrat mensuel ({len(filtered_data[filtered_data['Contract'] == 'Month-to-month'])} clients)\n"
-            f"3. Développer des offres de renouvellement anticipé pour les clients approchant de la fin de contrat\n"
-            f"4. Améliorer le support technique pour réduire le risque de 8% sur les clients sans assistance\n"
-            f"5. Mettre en place une surveillance renforcée des clients avec faible utilisation de services additionnels"
+            f"1. Cibler les {len(filtered_data[filtered_data['RiskLevel'] == 'Elevé'])} clients a risque eleve avec des offres de fidelisation personnalisees\n"
+            f"2. Mettre en place un programme de retention proactive pour les clients avec contrat mensuel ({len(filtered_data[filtered_data['Contract'] == 'Month-to-month'])} clients)\n"
+            f"3. Developper des offres de renouvellement anticipe pour les clients approchant de la fin de contrat\n"
+            f"4. Ameliorer le support technique pour reduire le risque de 8% sur les clients sans assistance\n"
+            f"5. Mettre en place une surveillance renforcee des clients avec faible utilisation de services additionnels"
         )
         
-        pdf.section_title("Plan d'Action à 6 Mois")
+        pdf.section_title("Plan d'Action a 6 Mois")
         pdf.body_text(
-            "• Mois 1-2: Lancement du programme de rétention ciblée\n"
-            "• Mois 3-4: Optimisation des offres de renouvellement\n"
-            "• Mois 5-6: Déploiement du système de surveillance prédictive"
+            "- Mois 1-2: Lancement du programme de retention ciblee\n"
+            "- Mois 3-4: Optimisation des offres de renouvellement\n"
+            "- Mois 5-6: Deploiement du systeme de surveillance predictive"
         )
         
         pdf.section_title("Objectifs Mesurables")
         pdf.body_text(
-            f"• Réduire le taux de churn de {churn_pct:.1f}% à {churn_pct*0.7:.1f}% dans les 6 prochains mois\n"
-            f"• Économie potentielle de ${revenue_potential * churn_pct/100 * 0.3:,.0f} sur base annuelle\n"
-            f"• Améliorer l'ancienneté moyenne de 15%\n"
-            f"• Augmenter la satisfaction client de 20%"
+            f"- Reduire le taux de churn de {churn_pct:.1f}% a {churn_pct*0.7:.1f}% dans les 6 prochains mois\n"
+            f"- Economie potentielle de ${revenue_potential * churn_pct/100 * 0.3:,.0f} sur base annuelle\n"
+            f"- Ameliorer l'anciennete moyenne de 15%\n"
+            f"- Augmenter la satisfaction client de 20%"
         )
         
         # ---------------- CONCLUSION ----------------
         pdf.add_page()
         pdf.chapter_title("6. CONCLUSION")
         
-        pdf.section_title("Synthèse")
+        pdf.section_title("Synthese")
         pdf.body_text(
-            "L'analyse approfondie des données clients révèle des opportunités significatives d'optimisation de la rétention. "
-            "Une approche ciblée basée sur la segmentation et la détection prédictive des risques permettra de réduire "
-            "significativement le churn tout en améliorant la satisfaction et la valeur client."
+            "L'analyse approfondie des donnees clients revele des opportunites significatives d'optimisation de la retention. "
+            "Une approche ciblee basee sur la segmentation et la detection predictive des risques permettra de reduire "
+            "significativement le churn tout en ameliorant la satisfaction et la valeur client."
         )
         
-        pdf.section_title("Prochaines Étapes")
+        pdf.section_title("Prochaines Etapes")
         pdf.body_text(
-            "• Validation des recommandations par les équipes opérationnelles\n"
-            "• Déploiement progressif des initiatives de rétention\n"
-            "• Mise en place d'un tableau de bord de suivi des indicateurs\n"
-            "• Réévaluation trimestrielle des stratégies déployées"
+            "- Validation des recommandations par les equipes operationnelles\n"
+            "- Deploiement progressif des initiatives de retention\n"
+            "- Mise en place d'un tableau de bord de suivi des indicateurs\n"
+            "- Reevaluation trimestrielle des strategies deployees"
         )
         
         # ---------------- PAGE DE CONTACT ----------------
         pdf.add_page()
         pdf.chapter_title("7. CONTACT & INFORMATIONS")
         
-        pdf.section_title("Équipe d'Analyse")
+        pdf.section_title("Equipe d'Analyse")
         pdf.body_text(
-            "• Directeur Analytics: [Nom]\n"
-            "• Data Scientists: [Noms]\n"
-            "• Analystes Business: [Noms]"
+            "- Directeur Analytics: [Nom]\n"
+            "- Data Scientists: [Noms]\n"
+            "- Analystes Business: [Noms]"
         )
         
-        pdf.section_title("Coordonnées")
+        pdf.section_title("Coordonnees")
         pdf.body_text(
-            "• Email: analytics@entreprise.com\n"
-            "• Téléphone: +33 1 23 45 67 89\n"
-            "• Portail interne: https://analytics.entreprise.com"
+            "- Email: analytics@entreprise.com\n"
+            "- Telephone: +33 1 23 45 67 89\n"
+            "- Portail interne: https://analytics.entreprise.com"
         )
         
-        pdf.section_title("Ressources Complémentaires")
+        pdf.section_title("Ressources Complementaires")
         pdf.body_text(
-            "• Documentation technique: Disponible sur le portail\n"
-            "• Données brutes: Accessibles via l'entrepôt de données\n"
-            "• Support: Disponible du lundi au vendredi, 9h-18h"
+            "- Documentation technique: Disponible sur le portail\n"
+            "- Donnees brutes: Accessibles via l'entrepot de donnees\n"
+            "- Support: Disponible du lundi au vendredi, 9h-18h"
         )
         
         # Génération du buffer pour le téléchargement
