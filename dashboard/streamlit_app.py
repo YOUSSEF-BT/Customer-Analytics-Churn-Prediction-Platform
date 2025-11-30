@@ -644,7 +644,7 @@ except Exception as e:
     st.error(f"Erreur lors de l'analyse des risques: {e}")
 
 # -----------------------------
-# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES - VERSION FINALE CORRIGÉE
+# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES - VERSION FINALE SIMPLE
 # -----------------------------
 class ProfessionalPDF(FPDF):
     def __init__(self):
@@ -1023,13 +1023,20 @@ def generate_professional_pdf():
             "- Support: Disponible du lundi au vendredi, 9h-18h"
         )
         
-        # Génération du buffer pour le téléchargement - CORRECTION FINALE
-        pdf_buffer = BytesIO()
-        # Utiliser output(dest='S') pour obtenir le PDF comme string
-        pdf_string = pdf.output(dest='S')
-        # Écrire le string encodé dans le buffer
-        pdf_buffer.write(pdf_string.encode('latin-1'))
-        pdf_buffer.seek(0)
+        # Génération du buffer pour le téléchargement - APPROCHE SIMPLE ET ROBUSTE
+        # Créer un fichier temporaire
+        temp_pdf_path = tempfile.mktemp(suffix='.pdf')
+        pdf.output(temp_pdf_path)
+        
+        # Lire le fichier et le mettre dans un buffer
+        with open(temp_pdf_path, 'rb') as f:
+            pdf_bytes = f.read()
+        
+        # Supprimer le fichier temporaire
+        os.unlink(temp_pdf_path)
+        
+        # Créer le buffer pour Streamlit
+        pdf_buffer = BytesIO(pdf_bytes)
         return pdf_buffer
         
     except Exception as e:
