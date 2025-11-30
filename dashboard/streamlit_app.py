@@ -708,11 +708,11 @@ def create_pdf_safe_plotly_figure(fig, width=800, height=400):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
             temp_path = tmpfile.name
         
-        # SOLUTION CORRECTE : Forcer la détection de Kaleido
+        # SOLUTION CORRECTE : Réinitialiser le scope de kaleido
         try:
-            # Réinitialiser le scope de kaleido
-            if hasattr(pio, 'kaleido') and pio.kaleido.scope is None:
-                pio.kaleido.scope = pio.kaleido.Scope()
+            # Forcer la réinitialisation de kaleido
+            if hasattr(pio, 'kaleido'):
+                pio.kaleido.scope = None
             
             # Utiliser kaleido directement
             pio.write_image(fig, temp_path, width=width, height=height, scale=2, engine='kaleido')
@@ -724,15 +724,7 @@ def create_pdf_safe_plotly_figure(fig, width=800, height=400):
                 pio.write_image(fig, temp_path, width=width, height=height, scale=2)
                 return temp_path
             except Exception as default_error:
-                # Dernier recours : sauvegarder en HTML et convertir
-                try:
-                    html_path = temp_path.replace('.png', '.html')
-                    fig.write_html(html_path)
-                    # Note: Cette partie nécessiterait une conversion HTML vers PNG
-                    # Pour l'instant, on retourne None
-                    return None
-                except Exception:
-                    return None
+                return None
         
     except Exception as e:
         return None
@@ -985,17 +977,23 @@ st.markdown("""
     <p style='color: #CCCCCC; margin-bottom: 1.5rem;'>Téléchargez un rapport détaillé avec analyse complète et recommandations</p>
 """, unsafe_allow_html=True)
 
-# Vérification de Kaleido - MODIFICATION ICI
+# Vérification CORRECTE de Kaleido - SOLUTION DÉFINITIVE
 try:
+    # Test réel de Kaleido
     import kaleido
-    # Test de fonctionnement de Kaleido
-    try:
-        test_fig = px.scatter(x=[1, 2, 3], y=[1, 2, 3])
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
-            test_path = tmpfile.name
-        pio.write_image(test_fig, test_path, engine='kaleido')
+    test_fig = px.scatter(x=[1, 2, 3], y=[1, 2, 3], title="Test")
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
+        test_path = tmpfile.name
+    
+    # Forcer la réinitialisation du scope kaleido
+    if hasattr(pio, 'kaleido'):
+        pio.kaleido.scope = None
+    
+    pio.write_image(test_fig, test_path, width=800, height=400, scale=2, engine='kaleido')
+    
+    if os.path.exists(test_path):
         os.unlink(test_path)
-        
         st.markdown("""
         <div style='background: #1a2d1a; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #27AE60;'>
             <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>✅ KALEIDO FONCTIONNEL</h4>
@@ -1004,17 +1002,10 @@ try:
             </p>
         </div>
         """, unsafe_allow_html=True)
-    except Exception as test_error:
-        st.markdown("""
-        <div style='background: #2d1a1a; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #C0392B;'>
-            <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>⚠️ KALEIDO INSTALLÉ MAIS NON FONCTIONNEL</h4>
-            <p style='color: #CCCCCC; margin: 0;'>
-                Kaleido est installé mais ne fonctionne pas correctement. Les graphiques peuvent ne pas s'exporter.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+    else:
+        raise ImportError("Kaleido test failed")
         
-except ImportError:
+except Exception as e:
     st.markdown("""
     <div style='background: #2A2A2A; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #404040;'>
         <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>📦 PRÉREQUIS POUR LE PDF</h4>
@@ -1024,6 +1015,9 @@ except ImportError:
         <code style='background: #1A1A1A; padding: 0.5rem; border-radius: 4px; display: block; margin: 0.5rem 0; color: #FFFFFF;'>
             pip install -U kaleido
         </code>
+        <p style='color: #CCCCCC; margin: 0.5rem 0 0 0; font-size: 0.9rem;'>
+            <strong>Note :</strong> Redémarrez Streamlit après l'installation.
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
