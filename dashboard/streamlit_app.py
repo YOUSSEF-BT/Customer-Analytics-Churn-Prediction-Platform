@@ -701,28 +701,24 @@ class ProfessionalPDF(FPDF):
             fill = not fill
         self.ln(5)
 
-def create_pdf_safe_plotly_figure(fig, width=800, height=400):
-    """Crée une image sûre à partir d'une figure Plotly avec gestion robuste"""
+def create_pdf_safe_plotly_figure(fig):
     try:
-        # Créer un fichier temporaire
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
-            temp_path = tmpfile.name
-        
-        # SOLUTION DÉFINITIVE : Utiliser la méthode to_image de Plotly
-        img_bytes = fig.to_image(format="png", width=width, height=height, scale=2)
-        with open(temp_path, 'wb') as f:
-            f.write(img_bytes)
-        return temp_path
-        
+        tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        fig.write_image(tmp_file.name, scale=2)
+        return tmp_file.name
     except Exception as e:
-        # Fallback : essayer la méthode standard
-        try:
-            pio.write_image(fig, temp_path, width=width, height=height, scale=2)
-            return temp_path
-        except:
-            return None
+        print(f"Erreur création image figure: {e}")
+        return None
 
-def generate_professional_pdf():
+# ---------------------
+# Génération PDF professionnel
+# ---------------------
+def generate_professional_pdf(
+        total_clients, churn_pct, avg_tenure, revenue_potential,
+        high_risk_data,
+        fig_churn, fig_contract, fig_tenure,
+        fig_cluster, fig_risk_contract, fig_risk_dist):
+
     file_path = "rapport_call_center_professionnel.pdf"
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -760,26 +756,28 @@ def generate_professional_pdf():
             os.remove(img)
             pdf.ln(8)
 
-    # ---------------- SEGMENTATION ----------------
+    # ---------------- SEGMENTATION AVANCÉE ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "3. Segmentation Clients", ln=True)
+    pdf.cell(0, 12, "3. Segmentation Avancée", ln=True)
+    pdf.set_font("Arial", "", 12)
 
     img = create_pdf_safe_plotly_figure(fig_cluster)
     if img:
         pdf.image(img, w=180)
         os.remove(img)
+        pdf.ln(8)
 
-    # ---------------- TOP 10 CLIENTS RISQUE ----------------
+    # ---------------- TOP 10 DES CLIENTS À HAUT RISQUE ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "4. Top 10 Clients à Haut Risque", ln=True)
+    pdf.cell(0, 12, "4. Top 10 des Clients à Haut Risque", ln=True)
     pdf.set_font("Arial", "", 12)
-
-    for _, row in high_risk_data.iterrows():
+    pdf.ln(5)
+    for i, row in high_risk_data.head(10).iterrows():
         pdf.multi_cell(0, 7,
-            f"- ID: {row['customerID']} | Contrat: {row['Contract']} | "
-            f"Charges: {row['MonthlyCharges']} | Ancienneté: {row['tenure']} | "
+            f"{i+1}. ID: {row['customerID']} | Contrat: {row['Contract']} | "
+            f"Charges: ${row['MonthlyCharges']} | Ancienneté: {row['tenure']} mois | "
             f"Score: {row['RiskScore']}"
         )
 
@@ -787,6 +785,7 @@ def generate_professional_pdf():
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
     pdf.cell(0, 12, "5. Analyse des Profils à Risque", ln=True)
+    pdf.set_font("Arial", "", 12)
 
     for fig in [fig_risk_contract, fig_risk_dist]:
         img = create_pdf_safe_plotly_figure(fig)
@@ -795,15 +794,15 @@ def generate_professional_pdf():
             os.remove(img)
             pdf.ln(8)
 
-    # ---------------- CONCLUSION ----------------
+    # ---------------- CONCLUSION & RECOMMANDATIONS ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 16)
     pdf.cell(0, 10, "6. Conclusion & Recommandations", ln=True)
     pdf.set_font("Arial", "", 12)
     pdf.multi_cell(0, 8,
-        "- Suivi prioritaire des contrats mensuels\n"
-        "- Fidélisation proactive des profils à risque\n"
-        "- Surveillance prédictive continue"
+        "- Prioriser le suivi des contrats mensuels pour réduire le churn\n"
+        "- Mettre en place une stratégie de fidélisation proactive pour les profils à risque\n"
+        "- Surveiller les indicateurs prédictifs pour anticiper les risques"
     )
 
     pdf.output(file_path)
