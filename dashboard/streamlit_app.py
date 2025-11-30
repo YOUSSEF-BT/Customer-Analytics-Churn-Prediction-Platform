@@ -723,236 +723,152 @@ def create_pdf_safe_plotly_figure(fig, width=800, height=400):
             return None
 
 def generate_professional_pdf():
-    """Génère un rapport PDF professionnel avec graphiques"""
-    try:
-        pdf = ProfessionalPDF()
-        pdf.add_page()
-        
-        # Page de titre
-        pdf.set_font('Arial', 'B', 24)
-        pdf.set_text_color(46, 90, 136)
-        pdf.cell(0, 20, 'RAPPORT ANALYTIQUE PROFESSIONNEL', 0, 1, 'C')
-        pdf.set_font('Arial', 'I', 14)
-        pdf.set_text_color(100, 100, 100)
-        pdf.cell(0, 15, 'Analyse du Churn Client - Dashboard Stratégique', 0, 1, 'C')
-        pdf.ln(10)
-        
-        # Section 1: Résumé exécutif
-        pdf.add_section_title('1. RÉSUMÉ EXÉCUTIF')
-        pdf.set_font('Arial', '', 11)
-        pdf.multi_cell(0, 6, 
-            f"Ce rapport présente une analyse complète de {total_clients} clients avec un taux de churn de {churn_pct:.1f}%. "
-            f"L'analyse identifie les tendances clés, les segments à risque et propose des recommandations stratégiques "
-            "pour optimiser la rétention client et maximiser la valeur à long terme."
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+
+    # -----------------------------
+    # PAGE DE GARDE
+    # -----------------------------
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 22)
+    pdf.cell(0, 20, "CALL CENTER ANALYTICS REPORT", ln=True, align="C")
+
+    pdf.set_font("Arial", "", 14)
+    pdf.cell(0, 10, "Customer Churn & Risk Detection Platform", ln=True, align="C")
+
+    pdf.ln(20)
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(0, 10, f"Date : {datetime.now().strftime('%d/%m/%Y')}", ln=True, align="C")
+
+    pdf.ln(30)
+    pdf.set_font("Arial", "", 12)
+    pdf.multi_cell(0, 10,
+        "Ce rapport fournit une analyse complète du centre d'appels, "
+        "incluant le comportement des clients, le churn, la segmentation "
+        "et la détection avancée des risques."
+    )
+
+    # -----------------------------
+    # RÉSUMÉ EXÉCUTIF
+    # -----------------------------
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 18)
+    pdf.cell(0, 12, "1. Résumé Exécutif", ln=True)
+
+    pdf.set_font("Arial", "", 12)
+    pdf.multi_cell(0, 8,
+        f"Nombre total de clients : {total_clients}\n"
+        f"Taux de churn : {churn_pct:.2f}%\n"
+        f"Ancienneté moyenne : {avg_tenure:.1f} mois\n"
+        f"Revenu annuel estimé : ${revenue:,.0f}\n\n"
+        "Cette analyse permet d'identifier les tendances clés, les segments "
+        "à risque élevé et d'optimiser les stratégies de fidélisation."
+    )
+
+    # -----------------------------
+    # KPI DASHBOARD
+    # -----------------------------
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 18)
+    pdf.cell(0, 12, "2. Indicateurs Clés de Performance (KPIs)", ln=True)
+
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, f"- Total Clients : {total_clients}", ln=True)
+    pdf.cell(0, 10, f"- Taux de Churn : {churn_pct:.2f} %", ln=True)
+    pdf.cell(0, 10, f"- Ancienneté Moyenne : {avg_tenure:.1f} mois", ln=True)
+    pdf.cell(0, 10, f"- Revenu Annuel : ${revenue:,.0f}", ln=True)
+
+    # -----------------------------
+    # ANALYSE VISUELLE
+    # -----------------------------
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 18)
+    pdf.cell(0, 12, "3. Analyse Graphique du Churn", ln=True)
+
+    # Churn
+    img = create_pdf_safe_plotly_figure(fig1)
+    if img:
+        pdf.image(img, w=180)
+        os.remove(img)
+
+    # Contrat
+    pdf.ln(10)
+    img = create_pdf_safe_plotly_figure(fig2)
+    if img:
+        pdf.image(img, w=180)
+        os.remove(img)
+
+    # Ancienneté
+    pdf.ln(10)
+    img = create_pdf_safe_plotly_figure(fig3)
+    if img:
+        pdf.image(img, w=180)
+        os.remove(img)
+
+    # Segmentation
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 18)
+    pdf.cell(0, 12, "4. Segmentation des Clients (Clustering)", ln=True)
+
+    img = create_pdf_safe_plotly_figure(fig_cluster)
+    if img:
+        pdf.image(img, w=180)
+        os.remove(img)
+
+    # -----------------------------
+    # DÉTECTION DES RISQUES AMÉLIORÉE
+    # -----------------------------
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 18)
+    pdf.cell(0, 12, "5. Détection des Risques Améliorée", ln=True)
+
+    pdf.set_font("Arial", "", 12)
+    pdf.multi_cell(0, 8,
+        "Cette section présente l'analyse des profils clients à risque élevé "
+        "de résiliation à partir des indicateurs financiers, comportementaux "
+        "et contractuels."
+    )
+
+    risk_clients = filtered_data[filtered_data["Churn"] == "Yes"].head(10)
+
+    pdf.ln(6)
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(0, 10, "Exemples de Profils à Risque :", ln=True)
+
+    pdf.set_font("Arial", "", 11)
+    for _, row in risk_clients.iterrows():
+        pdf.multi_cell(0, 7,
+            f"- Client | Contrat: {row['Contract']} | "
+            f"Charges: {row['MonthlyCharges']} | "
+            f"Ancienneté: {row['tenure']} mois"
         )
-        pdf.ln(5)
-        
-        # Section 2: Indicateurs clés
-        pdf.add_section_title('2. INDICATEURS CLÉS DE PERFORMANCE')
-        kpis_data = [
-            ('Portefeuille Clients', f"{total_clients:,}"),
-            ('Clients en Churn', f"{total_churn:,}"),
-            ('Clients Fidèles', f"{total_loyal:,}"),
-            ('Taux de Churn', f"{churn_pct:.1f}%"),
-            ('Ancienneté Moyenne', f"{avg_tenure:.1f} mois"),
-            ('Revenu Annuel Estimé', f"${revenue_potential:,.0f}"),
-            ('Charges Mensuelles Moy.', f"${avg_monthly_charges:.2f}")
-        ]
-        pdf.add_kpi_table(kpis_data)
-        
-        # Section 3: Graphiques d'analyse
-        pdf.add_page()
-        pdf.add_section_title('3. ANALYSE VISUELLE DES DONNÉES')
-        
-        # Graphique 1: Répartition Churn
-        pdf.set_font('Arial', 'B', 12)
-        pdf.set_text_color(46, 90, 136)
-        pdf.cell(0, 8, 'Répartition Churn vs Fidélité', 0, 1, 'L')
-        pdf.ln(2)
-        
-        try:
-            temp_path = create_pdf_safe_plotly_figure(fig_churn)
-            if temp_path and os.path.exists(temp_path):
-                pdf.image(temp_path, w=180)
-                pdf.ln(3)
-                pdf.set_font('Arial', 'I', 9)
-                pdf.set_text_color(100, 100, 100)
-                pdf.multi_cell(0, 5, 
-                    f"Le graphique montre que {churn_pct:.1f}% des clients ont quitté le service, "
-                    f"tandis que {100-churn_pct:.1f}% sont restés fidèles."
-                )
-                os.unlink(temp_path)
-            else:
-                pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, "Graphique non disponible", 0, 1)
-        except Exception as e:
-            pdf.set_font('Arial', 'I', 9)
-            pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
-        
-        pdf.ln(5)
-        
-        # Graphique 2: Churn par contrat
-        pdf.set_font('Arial', 'B', 12)
-        pdf.set_text_color(46, 90, 136)
-        pdf.cell(0, 8, 'Analyse du Churn par Type de Contrat', 0, 1, 'L')
-        pdf.ln(2)
-        
-        try:
-            temp_path = create_pdf_safe_plotly_figure(fig_contract)
-            if temp_path and os.path.exists(temp_path):
-                pdf.image(temp_path, w=180)
-                pdf.ln(3)
-                pdf.set_font('Arial', 'I', 9)
-                pdf.set_text_color(100, 100, 100)
-                pdf.multi_cell(0, 5, 
-                    "Répartition du churn selon les différents types de contrat proposés aux clients."
-                )
-                os.unlink(temp_path)
-            else:
-                pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, "Graphique non disponible", 0, 1)
-        except Exception as e:
-            pdf.set_font('Arial', 'I', 9)
-            pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
-        
-        pdf.ln(5)
-        
-        # Graphique 3: Distribution ancienneté
-        pdf.set_font('Arial', 'B', 12)
-        pdf.set_text_color(46, 90, 136)
-        pdf.cell(0, 8, "Distribution de l'Ancienneté des Clients", 0, 1, 'L')
-        pdf.ln(2)
-        
-        try:
-            temp_path = create_pdf_safe_plotly_figure(fig_tenure)
-            if temp_path and os.path.exists(temp_path):
-                pdf.image(temp_path, w=180)
-                pdf.ln(3)
-                pdf.set_font('Arial', 'I', 9)
-                pdf.set_text_color(100, 100, 100)
-                pdf.multi_cell(0, 5, 
-                    f"L'ancienneté moyenne des clients est de {avg_tenure:.1f} mois, "
-                    f"indiquant la durée moyenne de fidélité."
-                )
-                os.unlink(temp_path)
-            else:
-                pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, "Graphique non disponible", 0, 1)
-        except Exception as e:
-            pdf.set_font('Arial', 'I', 9)
-            pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
-        
-        # Graphique 4: Segmentation (si disponible)
-        if 'Cluster' in filtered_data.columns:
-            pdf.add_page()
-            pdf.set_font('Arial', 'B', 12)
-            pdf.set_text_color(46, 90, 136)
-            pdf.cell(0, 8, 'Segmentation Clients - Charges vs Ancienneté', 0, 1, 'L')
-            pdf.ln(2)
-            
-            try:
-                temp_path = create_pdf_safe_plotly_figure(fig_cluster)
-                if temp_path and os.path.exists(temp_path):
-                    pdf.image(temp_path, w=180)
-                    pdf.ln(3)
-                    pdf.set_font('Arial', 'I', 9)
-                    pdf.set_text_color(100, 100, 100)
-                    pdf.multi_cell(0, 5, 
-                        "Analyse de segmentation permettant d'identifier différents profils clients "
-                        "basés sur leurs charges et ancienneté."
-                    )
-                    os.unlink(temp_path)
-                else:
-                    pdf.set_font('Arial', 'I', 9)
-                    pdf.cell(0, 8, "Graphique non disponible", 0, 1)
-            except Exception as e:
-                pdf.set_font('Arial', 'I', 9)
-                pdf.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
-        
-        # SECTION 4 : Analyse des risques et segmentation
-        pdf.add_page()
-        pdf.add_section_title('4. ANALYSE DES RISQUES ET SEGMENTATION')
-        
-        # Analyse des risques
-        pdf.set_font('Arial', 'B', 12)
-        pdf.set_text_color(46, 90, 136)
-        pdf.cell(0, 8, 'Segments Clients à Haut Risque Identifiés:', 0, 1, 'L')
-        pdf.ln(2)
 
-        pdf.set_font('Arial', '', 10)
-        pdf.set_text_color(0, 0, 0)
-        risques = [
-            "- Segment Contrat Mensuel: Clients avec contrats month-to-month (plus forte proportion de churn)",
-            "- Segment Ancienneté Critique: Clients entre 30-40 mois d'ancienneté (pic de départ identifié)",
-            "- Cluster à Risque: Groupe spécifique de la segmentation nécessitant une attention immédiate"
-        ]
+    # -----------------------------
+    # CONCLUSION & RECOMMANDATIONS
+    # -----------------------------
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 18)
+    pdf.cell(0, 12, "6. Conclusion et Recommandations", ln=True)
 
-        for risque in risques:
-            pdf.multi_cell(0, 6, risque)
-            pdf.ln(1)
+    pdf.set_font("Arial", "", 12)
+    pdf.multi_cell(0, 8,
+        "Les résultats indiquent que le churn est fortement corrélé "
+        "au type de contrat et au niveau de facturation mensuelle.\n\n"
+        "Recommandations :\n"
+        "- Renforcer la fidélisation des clients à ancienneté faible\n"
+        "- Offrir des promotions ciblées\n"
+        "- Optimiser le service client pour les segments à fort risque\n"
+        "- Mettre en place un suivi prédictif en temps réel"
+    )
 
-        pdf.ln(3)
+    # -----------------------------
+    # SAUVEGARDE
+    # -----------------------------
+    file_path = "rapport_call_center_professionnel.pdf"
+    pdf.output(file_path)
 
-        # Niveau de risque
-        pdf.set_font('Arial', 'B', 12)
-        pdf.set_text_color(46, 90, 136)
-        pdf.cell(0, 8, 'Niveau de Risque par Segment:', 0, 1, 'L')
-        pdf.ln(2)
+    return file_path
 
-        pdf.set_font('Arial', '', 10)
-        niveaux_risque = [
-            "- Risque Élevé: Contrats mensuels + ancienneté 30-40 mois",
-            "- Risque Moyen: Clients approchant les 32 mois d'ancienneté moyenne", 
-            "- Risque Émergent: Nouveaux clients avec faible engagement"
-        ]
-
-        for niveau in niveaux_risque:
-            pdf.multi_cell(0, 6, niveau)
-            pdf.ln(1)
-
-        pdf.ln(5)
-        
-        # Section 5: Recommandations stratégiques
-        pdf.add_section_title('5. RECOMMANDATIONS STRATÉGIQUES')
-        
-        recommendations = [
-            f"- Cibler les {total_churn} clients à risque avec des offres de fidélisation personnalisées",
-            f"- Optimiser l'expérience client pour les contrats mensuels, segment le plus à risque", 
-            f"- Développer un programme de rétention pour les clients avec {avg_tenure:.1f} mois d'ancienneté moyenne",
-            "- Mettre en place un système d'alerte précoce pour détecter les signes de churn",
-            f"- Capitaliser sur les {total_loyal} clients fidèles avec des programmes de recommandation"
-        ]
-        
-        pdf.set_font('Arial', '', 10)
-        for rec in recommendations:
-            pdf.multi_cell(0, 6, rec)
-            pdf.ln(1)
-        
-        pdf.ln(5)
-        
-        # Section 6: Perspectives et objectifs
-        pdf.add_section_title('6. PERSPECTIVES ET OBJECTIFS')
-        pdf.set_font('Arial', '', 10)
-        pdf.multi_cell(0, 6, 
-            f"Objectif stratégique: Réduire le taux de churn de {churn_pct:.1f}% à {churn_pct*0.7:.1f}% "
-            f"dans les 6 prochains mois, ce qui représenterait une économie potentielle de "
-            f"${revenue_potential * churn_pct/100 * 0.3:,.0f} sur base annuelle."
-        )
-        
-        # Génération du buffer PDF
-        try:
-            pdf_buffer = BytesIO()
-            pdf_output = pdf.output(dest='S').encode('latin-1')
-            pdf_buffer.write(pdf_output)
-            pdf_buffer.seek(0)
-            return pdf_buffer
-        except Exception as e:
-            st.error(f"Erreur lors de la génération du PDF: {e}")
-            return None
-            
-    except Exception as e:
-        st.error(f"Erreur lors de la génération du PDF : {str(e)}")
-        return None
 
 # -----------------------------
 # SECTION RAPPORTS PROFESSIONNELS
