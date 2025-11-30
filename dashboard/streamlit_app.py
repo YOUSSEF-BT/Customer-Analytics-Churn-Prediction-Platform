@@ -827,6 +827,7 @@ def generate_professional_pdf(fig_churn, fig_contract, fig_tenure, fig_cluster, 
 
         # Colonne de gauche (Date uniquement)
         pdf.set_x(30)
+        pdf.set_font(pdf.default_font, 'B', 12)
         pdf.cell(80, 8, f"Date: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, 'L')
         # La ligne "Periode d'analyse" a été supprimée ici
 
@@ -896,7 +897,7 @@ def generate_professional_pdf(fig_churn, fig_contract, fig_tenure, fig_cluster, 
         pdf.body_text("Prochaines Etapes:\n- Validation des recommandations par les equipes operationnelles.\n- Deploiement progressif des initiatives de retention.\n- Mise en place d'un tableau de bord de suivi des indicateurs.\n- Reevaluation trimestrielle des strategies deployees.")
 
         pdf.chapter_title("8. CONTACT & INFORMATIONS")
-        pdf.body_text("- Directeur Analytics: [Nom]\n- Data Scientists: [Noms]\n- Analystes Business: [Noms]\n\nCoordonnees:\n- Email: analytics@entreprise.com\n- Telephone: +33 1 23 45 67 89\n- Portail interne: https://analytics.entreprise.com")
+        pdf.body_text("- Directeur Analytics: Youssef\n\nCoordonnees:\n- Email: bt.youssef.369@gmail.com\n- Telephone: +212 000000000"
         
         # --- Génération du buffer pour le téléchargement ---
         temp_pdf_path = tempfile.mktemp(suffix='.pdf')
