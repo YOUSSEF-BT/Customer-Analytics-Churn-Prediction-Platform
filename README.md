@@ -1,4 +1,3 @@
-```markdown
 # 🚀 Customer Analytics & Churn Prediction Platform
 
 <div align="center">
