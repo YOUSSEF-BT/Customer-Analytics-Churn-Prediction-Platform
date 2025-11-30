@@ -748,10 +748,10 @@ def generate_professional_pdf():
         f"Revenu annuel estimé : ${revenue_potential:,.0f}"
     )
 
-    # ---------------- GRAPHIQUES CHURN ----------------
+    # ---------------- ANALYSE VISUELLE STRATÉGIQUE ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "2. Analyse du Churn", ln=True)
+    pdf.cell(0, 12, "2. Analyse Visuelle Stratégique", ln=True)
 
     for fig in [fig_churn, fig_contract, fig_tenure]:
         img = create_pdf_safe_plotly_figure(fig)
@@ -764,32 +764,17 @@ def generate_professional_pdf():
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
     pdf.cell(0, 12, "3. Segmentation Clients", ln=True)
+
     img = create_pdf_safe_plotly_figure(fig_cluster)
     if img:
         pdf.image(img, w=180)
         os.remove(img)
 
-    # ---------------- DÉTECTION DES RISQUES ----------------
+    # ---------------- TOP 10 CLIENTS RISQUE ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "4. Détection des Risques Améliorée", ln=True)
-
-    img = create_pdf_safe_plotly_figure(fig_risk_contract)
-    if img:
-        pdf.image(img, w=180)
-        os.remove(img)
-
-    pdf.ln(8)
-    img = create_pdf_safe_plotly_figure(fig_risk_dist)
-    if img:
-        pdf.image(img, w=180)
-        os.remove(img)
-
-    # ---------------- TOP 10 RISQUE ----------------
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 14)
-    pdf.cell(0, 10, "Top 10 Clients à Haut Risque", ln=True)
-    pdf.set_font("Arial", "", 11)
+    pdf.cell(0, 12, "4. Top 10 Clients à Haut Risque", ln=True)
+    pdf.set_font("Arial", "", 12)
 
     for _, row in high_risk_data.iterrows():
         pdf.multi_cell(0, 7,
@@ -798,10 +783,22 @@ def generate_professional_pdf():
             f"Score: {row['RiskScore']}"
         )
 
+    # ---------------- ANALYSE DES PROFILS À RISQUE ----------------
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 18)
+    pdf.cell(0, 12, "5. Analyse des Profils à Risque", ln=True)
+
+    for fig in [fig_risk_contract, fig_risk_dist]:
+        img = create_pdf_safe_plotly_figure(fig)
+        if img:
+            pdf.image(img, w=180)
+            os.remove(img)
+            pdf.ln(8)
+
     # ---------------- CONCLUSION ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "Conclusion & Recommandations", ln=True)
+    pdf.cell(0, 10, "6. Conclusion & Recommandations", ln=True)
     pdf.set_font("Arial", "", 12)
     pdf.multi_cell(0, 8,
         "- Suivi prioritaire des contrats mensuels\n"
@@ -811,6 +808,7 @@ def generate_professional_pdf():
 
     pdf.output(file_path)
     return file_path
+
 # -----------------------------
 # SECTION RAPPORTS PROFESSIONNELS
 # -----------------------------
