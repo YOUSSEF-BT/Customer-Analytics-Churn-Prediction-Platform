@@ -237,4 +237,3 @@ streamlit run dashboard/streamlit_ultimate.py
 **Développé avec excellence en 8 heures par Youssef**
 
 </div>
-```
