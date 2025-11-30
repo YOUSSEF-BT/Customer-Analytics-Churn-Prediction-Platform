@@ -897,7 +897,7 @@ def generate_professional_pdf(fig_churn, fig_contract, fig_tenure, fig_cluster, 
         pdf.body_text("Prochaines Etapes:\n- Validation des recommandations par les equipes operationnelles.\n- Deploiement progressif des initiatives de retention.\n- Mise en place d'un tableau de bord de suivi des indicateurs.\n- Reevaluation trimestrielle des strategies deployees.")
 
         pdf.chapter_title("8. CONTACT & INFORMATIONS")
-        pdf.body_text("- Directeur Analytics: Youssef\n\nCoordonnees:\n- Email: bt.youssef.369@gmail.com\n- Telephone: +212 000000000"
+        pdf.body_text("- Directeur Analytics: Youssef\n\nCoordonnees:\n- Email: bt.youssef.369@gmail.com\n- Telephone: +212 000000000")
         
         # --- Génération du buffer pour le téléchargement ---
         temp_pdf_path = tempfile.mktemp(suffix='.pdf')
