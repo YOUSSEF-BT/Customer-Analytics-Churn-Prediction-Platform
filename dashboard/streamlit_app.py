@@ -645,6 +645,9 @@ except Exception as e:
 # -----------------------------
 # FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL - VERSION COMPTE ET OPTIMISÉE
 # -----------------------------
+# -----------------------------
+# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL - VERSION COMPTE ET OPTIMISÉE
+# -----------------------------
 class ProfessionalPDF(FPDF):
     def __init__(self):
         super().__init__()
@@ -690,6 +693,13 @@ class ProfessionalPDF(FPDF):
         self.set_font(self.default_font, 'B', 14)
         self.cell(0, 10, title, 0, 1, 'L', True)
         self.ln(4)
+
+    def section_title(self, title):
+        """Ajoute un titre de section plus petit qu'un chapitre."""
+        self.set_font(self.default_font, 'B', 12)
+        self.set_text_color(*self.primary_color)
+        self.cell(0, 8, title, 0, 1, 'L')
+        self.ln(3)
 
     def add_section_with_graph(self, title, fig, description="", width=185):
         """Ajoute un titre de section et son graphique de manière compacte."""
