@@ -234,6 +234,4 @@ streamlit run dashboard/streamlit_ultimate.py
 
 **"Innovation ne signifie pas toujours complexité - parfois, c'est l'exécution rapide et efficace qui fait la différence."**
 
-**Développé avec excellence en 8 heures par Youssef**
-
 </div>
