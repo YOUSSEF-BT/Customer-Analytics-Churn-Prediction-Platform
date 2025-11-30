@@ -84,7 +84,7 @@ st.markdown("""
         border: 1px solid #555555;
     }
     .stButton>button:hover {
-        background: linear-gradient(45deg, #505050, #707070);
+        background: linear-gradient(45deg, #505050, #706060);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
     }
@@ -644,7 +644,7 @@ except Exception as e:
     st.error(f"Erreur lors de l'analyse des risques: {e}")
 
 # -----------------------------
-# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES - VERSION CORRIGÉE
+# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES - VERSION FINALE CORRIGÉE
 # -----------------------------
 class ProfessionalPDF(FPDF):
     def __init__(self):
@@ -1023,9 +1023,12 @@ def generate_professional_pdf():
             "- Support: Disponible du lundi au vendredi, 9h-18h"
         )
         
-        # Génération du buffer pour le téléchargement
+        # Génération du buffer pour le téléchargement - CORRECTION FINALE
         pdf_buffer = BytesIO()
-        pdf.output(pdf_buffer)
+        # Utiliser output(dest='S') pour obtenir le PDF comme string
+        pdf_string = pdf.output(dest='S')
+        # Écrire le string encodé dans le buffer
+        pdf_buffer.write(pdf_string.encode('latin-1'))
         pdf_buffer.seek(0)
         return pdf_buffer
         
