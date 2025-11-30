@@ -642,151 +642,150 @@ try:
         
 except Exception as e:
     st.error(f"Erreur lors de l'analyse des risques: {e}")
+
 # -----------------------------
 # FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL - VERSION COMPTE ET OPTIMISÉE
 # -----------------------------
-# -----------------------------
-# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL - VERSION COMPTE ET OPTIMISÉE
-# -----------------------------
+
 class ProfessionalPDF(FPDF):
     def __init__(self):
         super().__init__()
-        self.set_auto_page_break(auto=True, margin=15)
+        self.set_auto_page_break(auto=True, margin=10) # Marges plus serrées
         self.company_name = "Customer Analytics & Churn Prediction Platform"
         self.primary_color = [46, 90, 136]  # Bleu royal
         self.secondary_color = [212, 175, 55]  # Or
         
-        # --- GESTION DES POLICES POUR LES ACCENTS ---
-        # Assurez-vous que les fichiers DejaVuSans.ttf et DejaVuSans-Bold.ttf
-        # sont dans le même dossier que ce script.
         try:
             self.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
             self.add_font('DejaVu', 'B', 'DejaVuSans-Bold.ttf', uni=True)
             self.default_font = 'DejaVu'
         except RuntimeError:
-            # Fallback si les polices ne sont pas trouvées
             self.default_font = 'Arial'
-            # Avertissement dans la console pour le développeur
-            print("ATTENTION: Police DejaVu non trouvée. Utilisation de Arial. Les accents peuvent ne pas s'afficher correctement.")
+            print("ATTENTION: Police DejaVu non trouvée. Utilisation de Arial.")
 
     def header(self):
         self.set_fill_color(*self.primary_color)
-        self.rect(0, 0, 210, 25, 'F')
-        self.set_font(self.default_font, 'B', 16)
+        self.rect(0, 0, 210, 20, 'F') # En-tête plus petit
+        self.set_font(self.default_font, 'B', 14)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 10, self.company_name, 0, 1, 'C')
-        self.set_font(self.default_font, 'I', 10)
+        self.cell(0, 8, self.company_name, 0, 1, 'C')
+        self.set_font(self.default_font, 'I', 9)
         self.cell(0, 5, "Rapport d'Analyse Strategique", 0, 1, 'C')
-        self.ln(10)
+        self.ln(5)
 
     def footer(self):
-        self.set_y(-15)
+        self.set_y(-10)
         self.set_fill_color(*self.primary_color)
-        self.rect(0, 285, 210, 15, 'F')
-        self.set_font(self.default_font, 'I', 8)
+        self.rect(0, 287, 210, 10, 'F') # Pied de page plus petit
+        self.set_font(self.default_font, 'I', 7)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 10, f'Page {self.page_no()} - Genere le {datetime.now().strftime("%d/%m/%Y a %H:%M")}', 0, 0, 'C')
+        self.cell(0, 8, f'Page {self.page_no()} - {datetime.now().strftime("%d/%m/%Y")}', 0, 0, 'C')
+
+    def check_page_break(self, required_height):
+        """Vérifie s'il faut ajouter une nouvelle page pour éviter les espaces vides."""
+        if self.get_y() + required_height > 270: # 270 est une limite sûre pour A4
+            self.add_page()
 
     def chapter_title(self, title):
+        self.check_page_break(15)
         self.set_fill_color(*self.primary_color)
         self.set_text_color(255, 255, 255)
-        self.set_font(self.default_font, 'B', 14)
+        self.set_font(self.default_font, 'B', 13)
         self.cell(0, 10, title, 0, 1, 'L', True)
-        self.ln(4)
+        self.ln(2)
 
-    def section_title(self, title):
-        """Ajoute un titre de section plus petit qu'un chapitre."""
-        self.set_font(self.default_font, 'B', 12)
-        self.set_text_color(*self.primary_color)
-        self.cell(0, 8, title, 0, 1, 'L')
-        self.ln(3)
+    def add_section_with_graph(self, title, fig, description="", width=190):
+        """Ajoute un titre et son graphique de manière compacte."""
+        # Estimer la hauteur nécessaire (titre + graphique + description)
+        required_height = 110 + (len(description.split('\n')) * 4)
+        self.check_page_break(required_height)
 
-    def add_section_with_graph(self, title, fig, description="", width=185):
-        """Ajoute un titre de section et son graphique de manière compacte."""
         # Titre de la section
-        self.set_font(self.default_font, 'B', 12)
+        self.set_font(self.default_font, 'B', 11)
         self.set_text_color(*self.primary_color)
-        self.cell(0, 8, title, 0, 1, 'L')
-        self.ln(1) # Très petit espace
+        self.cell(0, 7, title, 0, 1, 'L')
+        self.ln(1)
 
         # Insertion du graphique
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
-                img_bytes = fig.to_image(format="png", width=900, height=450, scale=1.5)
+                img_bytes = fig.to_image(format="png", width=1000, height=500, scale=1.2)
                 tmpfile.write(img_bytes)
                 tmp_path = tmpfile.name
             
             self.image(tmp_path, w=width)
-            os.unlink(tmp_path) # Nettoyer le fichier temporaire
-
+            os.unlink(tmp_path)
         except Exception as e:
             self.set_font(self.default_font, 'I', 9)
-            self.set_text_color(100, 100, 100)
-            self.cell(0, 8, f"Graphique non disponible: {str(e)}", 0, 1)
+            self.set_text_color(100, 0, 0)
+            self.cell(0, 8, f"Erreur graphique: {str(e)}", 0, 1)
 
         # Description
         if description:
             self.ln(2)
-            self.set_font(self.default_font, 'I', 9)
-            self.set_text_color(80, 80, 80)
+            self.set_font(self.default_font, 'I', 8)
+            self.set_text_color(60, 60, 60)
             self.multi_cell(0, 4, description)
         
-        self.ln(5) # Espace après la section complète
+        self.ln(3) # Espace minimal après la section
 
     def kpi_table(self, data):
-        self.set_font(self.default_font, 'B', 10)
+        self.check_page_break(60)
+        self.set_font(self.default_font, 'B', 9)
         self.set_fill_color(*self.primary_color)
         self.set_text_color(255, 255, 255)
-        self.cell(95, 7, 'INDICATEUR', 1, 0, 'C', True)
-        self.cell(45, 7, 'VALEUR', 1, 1, 'C', True)
+        self.cell(100, 6, 'INDICATEUR', 1, 0, 'C', True)
+        self.cell(40, 6, 'VALEUR', 1, 1, 'C', True)
         
-        self.set_font(self.default_font, '', 10)
-        self.set_text_color(0, 0, 0)
+        self.set_font(self.default_font, '', 9)
         fill = False
         for kpi, value in data:
             self.set_fill_color(240, 240, 240) if fill else self.set_fill_color(255, 255, 255)
-            self.cell(95, 7, kpi, 1, 0, 'L', fill)
-            self.cell(45, 7, str(value), 1, 1, 'C', fill)
+            self.cell(100, 6, kpi, 1, 0, 'L', fill)
+            self.cell(40, 6, str(value), 1, 1, 'C', fill)
             fill = not fill
-        self.ln(5)
+        self.ln(3)
 
     def risk_table(self, data):
-        self.set_font(self.default_font, 'B', 9)
+        self.check_page_break(80)
+        self.set_font(self.default_font, 'B', 8)
         self.set_fill_color(*self.secondary_color)
         self.set_text_color(0, 0, 0)
-        headers = ['ID Client', 'Contrat', 'Ancienneté', 'Charges', 'Score', 'Niveau']
-        widths = [35, 40, 20, 25, 25, 25]
+        headers = ['ID Client', 'Contrat', 'Anci.', 'Charges', 'Score', 'Niveau']
+        widths = [40, 40, 15, 25, 25, 25]
         for header, width in zip(headers, widths):
-            self.cell(width, 7, header, 1, 0, 'C', True)
+            self.cell(width, 6, header, 1, 0, 'C', True)
         self.ln()
         
         self.set_font(self.default_font, '', 8)
         fill = False
         for _, row in data.iterrows():
             self.set_fill_color(245, 245, 245) if fill else self.set_fill_color(255, 255, 255)
-            self.cell(widths[0], 7, str(row['customerID']), 1, 0, 'L', fill)
-            self.cell(widths[1], 7, str(row['Contract']), 1, 0, 'L', fill)
-            self.cell(widths[2], 7, str(row['tenure']), 1, 0, 'C', fill)
-            self.cell(widths[3], 7, f"${row['MonthlyCharges']:.2f}", 1, 0, 'C', fill)
-            self.cell(widths[4], 7, f"{row['RiskScore']:.3f}", 1, 0, 'C', fill)
+            self.cell(widths[0], 6, str(row['customerID'])[:15], 1, 0, 'L', fill)
+            self.cell(widths[1], 6, str(row['Contract']), 1, 0, 'L', fill)
+            self.cell(widths[2], 6, str(row['tenure']), 1, 0, 'C', fill)
+            self.cell(widths[3], 6, f"${row['MonthlyCharges']:.0f}", 1, 0, 'C', fill)
+            self.cell(widths[4], 6, f"{row['RiskScore']:.2f}", 1, 0, 'C', fill)
             
-            # Couleur pour le niveau de risque
             if 'Élevé' in row['RiskLevel'] or 'Elevé' in row['RiskLevel']:
                 self.set_text_color(192, 57, 43)
             elif 'Moyen' in row['RiskLevel']:
                 self.set_text_color(230, 126, 34)
             else:
                 self.set_text_color(39, 174, 96)
-            self.cell(widths[5], 7, str(row['RiskLevel']), 1, 1, 'C', fill)
+            self.cell(widths[5], 6, str(row['RiskLevel']), 1, 1, 'C', fill)
             self.set_text_color(0, 0, 0)
             fill = not fill
-        self.ln(5)
+        self.ln(3)
 
     def body_text(self, text):
-        self.set_font(self.default_font, '', 11)
+        lines = text.split('\n')
+        self.check_page_break(len(lines) * 5 + 5)
+        self.set_font(self.default_font, '', 10)
         self.set_text_color(0, 0, 0)
-        self.multi_cell(0, 5, text)
-        self.ln(4)
+        for line in lines:
+            self.multi_cell(0, 5, line)
+        self.ln(2)
 
 def generate_professional_pdf():
     try:
@@ -796,35 +795,32 @@ def generate_professional_pdf():
         pdf.add_page()
         pdf.set_fill_color(*pdf.primary_color)
         pdf.rect(0, 0, 210, 297, 'F')
-        pdf.set_font(pdf.default_font, 'B', 28)
+        pdf.set_font(pdf.default_font, 'B', 26)
         pdf.set_text_color(255, 255, 255)
         pdf.cell(0, 40, "RAPPORT D'ANALYSE STRATEGIQUE", 0, 1, 'C')
-        pdf.set_font(pdf.default_font, 'I', 18)
+        pdf.set_font(pdf.default_font, 'I', 16)
         pdf.set_text_color(*pdf.secondary_color)
         pdf.cell(0, 15, "Customer Analytics & Churn Prediction", 0, 1, 'C')
-        pdf.set_font(pdf.default_font, '', 14)
-        pdf.cell(0, 10, f"Date: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, 'C')
-        pdf.cell(0, 10, "Periode d'analyse: Q1 2023", 0, 1, 'C')
+        pdf.set_font(pdf.default_font, '', 12)
+        pdf.cell(0, 8, f"Date: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, 'C')
+        pdf.cell(0, 8, "Periode d'analyse: Q1 2023", 0, 1, 'C')
         pdf.set_draw_color(*pdf.secondary_color)
         pdf.line(30, 130, 180, 130)
-        pdf.set_font(pdf.default_font, 'B', 16)
+        pdf.set_font(pdf.default_font, 'B', 14)
         pdf.cell(0, 20, "Prepare pour:", 0, 1, 'L')
-        pdf.set_font(pdf.default_font, '', 14)
-        pdf.cell(0, 10, "Direction de la Clientele", 0, 1, 'L')
-        pdf.cell(0, 10, "Departement Marketing & Ventes", 0, 1, 'L')
+        pdf.set_font(pdf.default_font, '', 12)
+        pdf.cell(0, 8, "Direction de la Clientele", 0, 1, 'L')
+        pdf.cell(0, 8, "Departement Marketing & Ventes", 0, 1, 'L')
         pdf.set_y(270)
-        pdf.set_font(pdf.default_font, 'I', 10)
+        pdf.set_font(pdf.default_font, 'I', 9)
         pdf.set_text_color(200, 200, 200)
         pdf.cell(0, 10, "Document confidentiel - Propriete exclusive", 0, 0, 'C')
 
         # --- RESUME EXECUTIF ---
         pdf.add_page()
         pdf.chapter_title("1. RESUME EXECUTIF")
-        pdf.section_title("Vue d'ensemble")
         pdf.body_text(f"Ce rapport presente une analyse complete de {total_clients:,} clients avec un taux de churn de {churn_pct:.1f}%. L'analyse identifie les tendances cles, les segments a risque et propose des recommandations strategiques pour optimiser la retention client et maximiser la valeur a long terme.")
-        pdf.section_title("Points cles")
-        pdf.body_text(f"- Le portefeuille clients genere un revenu annuel estime de ${revenue_potential:,.0f}\n- {total_churn:,} clients ont quitte le service durant la periode analysee\n- L'anciennete moyenne est de {avg_tenure:.1f} mois, indiquant une fidelite moyenne\n- Les contrats mensuels presentent le risque de churn le plus eleve")
-        pdf.section_title("Indicateurs cles de performance")
+        pdf.body_text(f"Le portefeuille clients genere un revenu annuel estime de ${revenue_potential:,.0f}. {total_churn:,} clients ont quitte le service durant la periode analysee. L'anciennete moyenne est de {avg_tenure:.1f} mois, indiquant une fidelite moyenne. Les contrats mensuels presentent le risque de churn le plus eleve.")
         kpis_data = [
             ('Portefeuille Clients', f"{total_clients:,}"),
             ('Clients en Churn', f"{total_churn:,}"),
@@ -851,7 +847,6 @@ def generate_professional_pdf():
         pdf.add_page()
         pdf.chapter_title("4. SEGMENTATION STRATEGIQUE")
         pdf.add_section_with_graph('Segmentation Clients - Charges vs Anciennete', fig_cluster, "Analyse de segmentation permettant d'identifier differents profils clients. Chaque cluster represente un segment distinct.")
-        pdf.section_title("Profils Identifies")
         pdf.body_text("- Cluster 0: Clients recents avec charges faibles a moyennes\n- Cluster 1: Clients etablis avec charges moyennes\n- Cluster 2: Clients de longue date avec charges elevees\n- Cluster 3: Clients avec charges tres elevees, fidelite variable")
 
         # --- DETECTION PREDICTIVE DES RISQUES ---
@@ -859,36 +854,24 @@ def generate_professional_pdf():
         pdf.chapter_title("5. DETECTION PREDICTIVE DES RISQUES")
         pdf.add_section_with_graph('Repartition des Risques par Type de Contrat', fig_risk_contract, "Les contrats mensuels concentrent la majorite des risques eleves.")
         pdf.add_section_with_graph("Distribution des Scores de Risque", fig_risk_dist, "Histogramme montrant la distribution des scores de risque. La queue droite represente les clients a haut risque.")
-        pdf.section_title("Top 10 Clients a Haut Risque")
         pdf.risk_table(high_risk_data)
 
         # --- RECOMMANDATIONS STRATEGIQUES ---
         pdf.add_page()
         pdf.chapter_title("6. RECOMMANDATIONS STRATEGIQUES")
-        pdf.section_title("Actions Prioritaires")
-        pdf.body_text(f"1. Cibler les {len(filtered_data[filtered_data['RiskLevel'] == 'Elevé'])} clients a risque eleve avec des offres de fidelisation personnalisees\n2. Mettre en place un programme de retention proactive pour les clients avec contrat mensuel ({len(filtered_data[filtered_data['Contract'] == 'Month-to-month'])} clients)\n3. Developper des offres de renouvellement anticipe pour les clients approchant de la fin de contrat\n4. Ameliorer le support technique\n5. Mettre en place une surveillance renforcee des clients avec faible utilisation de services additionnels")
-        pdf.section_title("Plan d'Action a 6 Mois")
-        pdf.body_text("- Mois 1-2: Lancement du programme de retention ciblee\n- Mois 3-4: Optimisation des offres de renouvellement\n- Mois 5-6: Deploiement du systeme de surveillance predictive")
-        pdf.section_title("Objectifs Mesurables")
-        pdf.body_text(f"- Reduire le taux de churn de {churn_pct:.1f}% a {churn_pct*0.7:.1f}% dans les 6 prochains mois\n- Economie potentielle de ${revenue_potential * churn_pct/100 * 0.3:,.0f} sur base annuelle\n- Ameliorer l'anciennete moyenne de 15%\n- Augmenter la satisfaction client de 20%")
+        pdf.body_text(f"1. Cibler les {len(filtered_data[filtered_data['RiskLevel'] == 'Elevé'])} clients a risque eleve avec des offres de fidelisation personnalisees.\n2. Mettre en place un programme de retention proactive pour les clients avec contrat mensuel ({len(filtered_data[filtered_data['Contract'] == 'Month-to-month'])} clients).\n3. Developper des offres de renouvellement anticipe pour les clients approchant de la fin de contrat.\n4. Ameliorer le support technique.\n5. Mettre en place une surveillance renforcee des clients avec faible utilisation de services additionnels.")
+        pdf.body_text(f"Objectif: Reduire le taux de churn de {churn_pct:.1f}% a {churn_pct*0.7:.1f}% dans les 6 prochains mois, pour une economie potentielle de ${revenue_potential * churn_pct/100 * 0.3:,.0f} sur base annuelle.")
         
         # --- CONCLUSION ---
         pdf.add_page()
         pdf.chapter_title("7. CONCLUSION")
-        pdf.section_title("Synthese")
         pdf.body_text("L'analyse approfondie des donnees clients revele des opportunites significatives d'optimisation de la retention. Une approche ciblee basee sur la segmentation et la detection predictive des risques permettra de reduire significativement le churn tout en ameliorant la satisfaction et la valeur client.")
-        pdf.section_title("Prochaines Etapes")
-        pdf.body_text("- Validation des recommandations par les equipes operationnelles\n- Deploiement progressif des initiatives de retention\n- Mise en place d'un tableau de bord de suivi des indicateurs\n- Reevaluation trimestrielle des strategies deployees")
+        pdf.body_text("Prochaines Etapes:\n- Validation des recommandations par les equipes operationnelles.\n- Deploiement progressif des initiatives de retention.\n- Mise en place d'un tableau de bord de suivi des indicateurs.\n- Reevaluation trimestrielle des strategies deployees.")
 
         # --- CONTACT ---
         pdf.add_page()
         pdf.chapter_title("8. CONTACT & INFORMATIONS")
-        pdf.section_title("Equipe d'Analyse")
-        pdf.body_text("- Directeur Analytics: [Nom]\n- Data Scientists: [Noms]\n- Analystes Business: [Noms]")
-        pdf.section_title("Coordonnees")
-        pdf.body_text("- Email: analytics@entreprise.com\n- Telephone: +33 1 23 45 67 89\n- Portail interne: https://analytics.entreprise.com")
-        pdf.section_title("Ressources Complementaires")
-        pdf.body_text("- Documentation technique: Disponible sur le portail\n- Donnees brutes: Accessibles via l'entrepot de donnees\n- Support: Disponible du lundi au vendredi, 9h-18h")
+        pdf.body_text("- Directeur Analytics: [Nom]\n- Data Scientists: [Noms]\n- Analystes Business: [Noms]\n\nCoordonnees:\n- Email: analytics@entreprise.com\n- Telephone: +33 1 23 45 67 89\n- Portail interne: https://analytics.entreprise.com")
         
         # --- Génération du buffer pour le téléchargement ---
         temp_pdf_path = tempfile.mktemp(suffix='.pdf')
@@ -902,7 +885,6 @@ def generate_professional_pdf():
     except Exception as e:
         st.error(f"Erreur lors de la génération du PDF : {str(e)}")
         return None
-
 # -----------------------------
 # SECTION RAPPORTS PROFESSIONNELS
 # -----------------------------
