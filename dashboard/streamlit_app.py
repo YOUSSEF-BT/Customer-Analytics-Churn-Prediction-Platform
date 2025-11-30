@@ -649,6 +649,8 @@ except Exception as e:
 
 # -----------------------------
 # FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL - VERSION FINALE COMPTE
+# -----------------------------# -----------------------------
+# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL - VERSION FINALE COMPTE ET ROBUSTE
 # -----------------------------
 class ProfessionalPDF(FPDF):
     def __init__(self):
@@ -786,7 +788,8 @@ class ProfessionalPDF(FPDF):
         self.multi_cell(0, 5, text)
         self.ln(3)
 
-def generate_professional_pdf():
+# --- FONCTION MODIFIÉE (PREND LES GRAPHIQUES EN ARGUMENT) ---
+def generate_professional_pdf(fig_churn, fig_contract, fig_tenure, fig_cluster, fig_risk_contract, fig_risk_dist, high_risk_data):
     try:
         pdf = ProfessionalPDF()
         
@@ -844,9 +847,21 @@ def generate_professional_pdf():
         pdf.body_text("- Cluster 0: Clients recents avec charges faibles a moyennes\n- Cluster 1: Clients etablis avec charges moyennes\n- Cluster 2: Clients de longue date avec charges elevees\n- Cluster 3: Clients avec charges tres elevees, fidelite variable")
 
         pdf.chapter_title("5. DETECTION PREDICTIVE DES RISQUES")
-        pdf.add_section_with_graph('Repartition des Risques par Type de Contrat', fig_risk_contract, "Les contrats mensuels concentrent la majorite des risques eleves.")
-        pdf.add_section_with_graph("Distribution des Scores de Risque", fig_risk_dist, "Histogramme montrant la distribution des scores de risque. La queue droite represente les clients a haut risque.")
-        pdf.risk_table(high_risk_data)
+        # AJOUT DE VÉRIFICATIONS ICI
+        if fig_risk_contract:
+            pdf.add_section_with_graph('Repartition des Risques par Type de Contrat', fig_risk_contract, "Les contrats mensuels concentrent la majorite des risques eleves.")
+        else:
+            pdf.body_text("Le graphique 'Repartition des Risques par Type de Contrat' n'a pas pu être généré.")
+
+        if fig_risk_dist:
+            pdf.add_section_with_graph("Distribution des Scores de Risque", fig_risk_dist, "Histogramme montrant la distribution des scores de risque. La queue droite represente les clients a haut risque.")
+        else:
+            pdf.body_text("Le graphique 'Distribution des Scores de Risque' n'a pas pu être généré.")
+
+        if not high_risk_data.empty:
+            pdf.risk_table(high_risk_data)
+        else:
+            pdf.body_text("Le tableau 'Top 10 Clients a Haut Risque' est vide ou n'a pas pu être généré.")
 
         pdf.chapter_title("6. RECOMMANDATIONS STRATEGIQUES")
         pdf.body_text(f"1. Cibler les {len(filtered_data[filtered_data['RiskLevel'] == 'Elevé'])} clients a risque eleve avec des offres de fidelisation personnalisees.\n2. Mettre en place un programme de retention proactive pour les clients avec contrat mensuel ({len(filtered_data[filtered_data['Contract'] == 'Month-to-month'])} clients).\n3. Developper des offres de renouvellement anticipe pour les clients approchant de la fin de contrat.\n4. Ameliorer le support technique.\n5. Mettre en place une surveillance renforcee des clients avec faible utilisation de services additionnels.")
@@ -871,14 +886,9 @@ def generate_professional_pdf():
     except Exception as e:
         st.error(f"Erreur lors de la génération du PDF : {str(e)}")
         return None
-# -----------------------------
-# SECTION RAPPORTS PROFESSIONNELS
-# -----------------------------
-st.markdown("""
-<div style='text-align: center; margin: 4rem 0 2rem 0;'>
-    <h2 style='color: #E0E0E0; border-bottom: 3px solid #808080; padding-bottom: 0.8rem; display: inline-block; font-size: 1.8rem;'>📋 EXPORT PROFESSIONNEL</h2>
-</div>
-""", unsafe_allow_html=True)
+
+# --- APPEL DE LA FONCTION MODIFIÉE DANS VOTRE INTERFACE STREAMLIT ---
+# Trouvez la section avec le bouton de téléchargement PDF et remplacez l'appel de fonction par ceci :
 
 # Section PDF
 st.markdown("""
@@ -889,8 +899,8 @@ st.markdown("""
 
 if st.button("🖨️ GÉNÉRER LE RAPPORT PDF AVEC GRAPHIQUES", key="generate_pdf", use_container_width=True):
     with st.spinner("📊 Génération du rapport professionnel..."):
-        # Générer le PDF
-        pdf_buffer = generate_professional_pdf()
+        # C'EST CETTE LIGNE QUI EST MODIFIÉE
+        pdf_buffer = generate_professional_pdf(fig_churn, fig_contract, fig_tenure, fig_cluster, fig_risk_contract, fig_risk_dist, high_risk_data)
         
         if pdf_buffer:
             st.success("✅ Rapport PDF généré avec succès!")
