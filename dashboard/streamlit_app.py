@@ -723,151 +723,95 @@ def create_pdf_safe_plotly_figure(fig, width=800, height=400):
             return None
 
 def generate_professional_pdf():
+    file_path = "rapport_call_center_professionnel.pdf"
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    # -----------------------------
-    # PAGE DE GARDE
-    # -----------------------------
+    # ---------------- PAGE DE GARDE ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 22)
     pdf.cell(0, 20, "CALL CENTER ANALYTICS REPORT", ln=True, align="C")
-
     pdf.set_font("Arial", "", 14)
     pdf.cell(0, 10, "Customer Churn & Risk Detection Platform", ln=True, align="C")
-
-    pdf.ln(20)
-    pdf.set_font("Arial", "B", 12)
+    pdf.ln(15)
     pdf.cell(0, 10, f"Date : {datetime.now().strftime('%d/%m/%Y')}", ln=True, align="C")
 
-    pdf.ln(30)
-    pdf.set_font("Arial", "", 12)
-    pdf.multi_cell(0, 10,
-        "Ce rapport fournit une analyse complète du centre d'appels, "
-        "incluant le comportement des clients, le churn, la segmentation "
-        "et la détection avancée des risques."
-    )
-
-    # -----------------------------
-    # RÉSUMÉ EXÉCUTIF
-    # -----------------------------
+    # ---------------- RÉSUMÉ ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
     pdf.cell(0, 12, "1. Résumé Exécutif", ln=True)
-
     pdf.set_font("Arial", "", 12)
     pdf.multi_cell(0, 8,
-        f"Nombre total de clients : {total_clients}\n"
+        f"Total clients : {total_clients}\n"
         f"Taux de churn : {churn_pct:.2f}%\n"
         f"Ancienneté moyenne : {avg_tenure:.1f} mois\n"
-        f"Revenu annuel estimé : ${revenue:,.0f}\n\n"
-        "Cette analyse permet d'identifier les tendances clés, les segments "
-        "à risque élevé et d'optimiser les stratégies de fidélisation."
+        f"Revenu annuel estimé : ${revenue_potential:,.0f}"
     )
 
-    # -----------------------------
-    # KPI DASHBOARD
-    # -----------------------------
+    # ---------------- GRAPHIQUES CHURN ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "2. Indicateurs Clés de Performance (KPIs)", ln=True)
+    pdf.cell(0, 12, "2. Analyse du Churn", ln=True)
 
-    pdf.set_font("Arial", "", 12)
-    pdf.cell(0, 10, f"- Total Clients : {total_clients}", ln=True)
-    pdf.cell(0, 10, f"- Taux de Churn : {churn_pct:.2f} %", ln=True)
-    pdf.cell(0, 10, f"- Ancienneté Moyenne : {avg_tenure:.1f} mois", ln=True)
-    pdf.cell(0, 10, f"- Revenu Annuel : ${revenue:,.0f}", ln=True)
+    for fig in [fig_churn, fig_contract, fig_tenure]:
+        img = create_pdf_safe_plotly_figure(fig)
+        if img:
+            pdf.image(img, w=180)
+            os.remove(img)
+            pdf.ln(8)
 
-    # -----------------------------
-    # ANALYSE VISUELLE
-    # -----------------------------
+    # ---------------- SEGMENTATION ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "3. Analyse Graphique du Churn", ln=True)
-
-    # Churn
-    img = create_pdf_safe_plotly_figure(fig1)
-    if img:
-        pdf.image(img, w=180)
-        os.remove(img)
-
-    # Contrat
-    pdf.ln(10)
-    img = create_pdf_safe_plotly_figure(fig2)
-    if img:
-        pdf.image(img, w=180)
-        os.remove(img)
-
-    # Ancienneté
-    pdf.ln(10)
-    img = create_pdf_safe_plotly_figure(fig3)
-    if img:
-        pdf.image(img, w=180)
-        os.remove(img)
-
-    # Segmentation
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "4. Segmentation des Clients (Clustering)", ln=True)
-
+    pdf.cell(0, 12, "3. Segmentation Clients", ln=True)
     img = create_pdf_safe_plotly_figure(fig_cluster)
     if img:
         pdf.image(img, w=180)
         os.remove(img)
 
-    # -----------------------------
-    # DÉTECTION DES RISQUES AMÉLIORÉE
-    # -----------------------------
+    # ---------------- DÉTECTION DES RISQUES ----------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "5. Détection des Risques Améliorée", ln=True)
+    pdf.cell(0, 12, "4. Détection des Risques Améliorée", ln=True)
 
-    pdf.set_font("Arial", "", 12)
-    pdf.multi_cell(0, 8,
-        "Cette section présente l'analyse des profils clients à risque élevé "
-        "de résiliation à partir des indicateurs financiers, comportementaux "
-        "et contractuels."
-    )
+    img = create_pdf_safe_plotly_figure(fig_risk_contract)
+    if img:
+        pdf.image(img, w=180)
+        os.remove(img)
 
-    risk_clients = filtered_data[filtered_data["Churn"] == "Yes"].head(10)
+    pdf.ln(8)
+    img = create_pdf_safe_plotly_figure(fig_risk_dist)
+    if img:
+        pdf.image(img, w=180)
+        os.remove(img)
 
-    pdf.ln(6)
+    # ---------------- TOP 10 RISQUE ----------------
+    pdf.add_page()
     pdf.set_font("Arial", "B", 14)
-    pdf.cell(0, 10, "Exemples de Profils à Risque :", ln=True)
-
+    pdf.cell(0, 10, "Top 10 Clients à Haut Risque", ln=True)
     pdf.set_font("Arial", "", 11)
-    for _, row in risk_clients.iterrows():
+
+    for _, row in high_risk_data.iterrows():
         pdf.multi_cell(0, 7,
-            f"- Client | Contrat: {row['Contract']} | "
-            f"Charges: {row['MonthlyCharges']} | "
-            f"Ancienneté: {row['tenure']} mois"
+            f"- ID: {row['customerID']} | Contrat: {row['Contract']} | "
+            f"Charges: {row['MonthlyCharges']} | Ancienneté: {row['tenure']} | "
+            f"Score: {row['RiskScore']}"
         )
 
-    # -----------------------------
-    # CONCLUSION & RECOMMANDATIONS
-    # -----------------------------
+    # ---------------- CONCLUSION ----------------
     pdf.add_page()
-    pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "6. Conclusion et Recommandations", ln=True)
-
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "Conclusion & Recommandations", ln=True)
     pdf.set_font("Arial", "", 12)
     pdf.multi_cell(0, 8,
-        "Les résultats indiquent que le churn est fortement corrélé "
-        "au type de contrat et au niveau de facturation mensuelle.\n\n"
-        "Recommandations :\n"
-        "- Renforcer la fidélisation des clients à ancienneté faible\n"
-        "- Offrir des promotions ciblées\n"
-        "- Optimiser le service client pour les segments à fort risque\n"
-        "- Mettre en place un suivi prédictif en temps réel"
+        "- Suivi prioritaire des contrats mensuels\n"
+        "- Fidélisation proactive des profils à risque\n"
+        "- Surveillance prédictive continue"
     )
 
-    # -----------------------------
-    # SAUVEGARDE
-    # -----------------------------
-    file_path = "rapport_call_center_professionnel.pdf"
     pdf.output(file_path)
-
     return file_path
+
 
 
 # -----------------------------
