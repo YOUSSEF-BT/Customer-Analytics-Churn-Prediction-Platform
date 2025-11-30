@@ -644,7 +644,7 @@ except Exception as e:
     st.error(f"Erreur lors de l'analyse des risques: {e}")
 
 # -----------------------------
-# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL AVEC GRAPHIQUES - VERSION FINALE SIMPLE
+# FONCTION POUR GÉNÉRER LE PDF PROFESSIONNEL - VERSION AMÉLIORÉE
 # -----------------------------
 class ProfessionalPDF(FPDF):
     def __init__(self):
@@ -655,6 +655,7 @@ class ProfessionalPDF(FPDF):
         self.secondary_color = [212, 175, 55]  # Or
         self.accent_color = [30, 58, 95]  # Bleu marine
         self.light_color = [91, 141, 184]  # Bleu ciel
+        self.set_font('Arial', '', 12)  # Définir une police par défaut
     
     def header(self):
         # En-tête personnalisé avec design professionnel
@@ -697,11 +698,10 @@ class ProfessionalPDF(FPDF):
         self.ln(3)
     
     def body_text(self, text):
-        # Nettoyer le texte pour éviter les problèmes d'encodage
-        clean_text = text.replace('•', '-').replace('→', '->').replace('←', '<-').replace('↑', '^').replace('↓', 'v')
+        # Gérer correctement les caractères français
         self.set_font('Arial', '', 11)
         self.set_text_color(0, 0, 0)
-        self.multi_cell(0, 6, clean_text)
+        self.multi_cell(0, 6, text)
         self.ln(5)
     
     def kpi_table(self, data):
@@ -717,16 +717,12 @@ class ProfessionalPDF(FPDF):
         self.set_text_color(0, 0, 0)
         fill = False
         for kpi, value in data:
-            # Nettoyer les valeurs pour éviter les problèmes d'encodage
-            clean_kpi = kpi.replace('é', 'e').replace('è', 'e').replace('ê', 'e').replace('à', 'a').replace('â', 'a')
-            clean_value = str(value).replace('€', 'EUR').replace('£', 'GBP').replace('¥', 'JPY')
-            
             if fill:
                 self.set_fill_color(245, 245, 245)
             else:
                 self.set_fill_color(255, 255, 255)
-            self.cell(100, 8, clean_kpi, 1, 0, 'L', fill)
-            self.cell(50, 8, clean_value, 1, 1, 'C', fill)
+            self.cell(100, 8, kpi, 1, 0, 'L', fill)
+            self.cell(50, 8, str(value), 1, 1, 'C', fill)
             fill = not fill
         self.ln(5)
     
@@ -793,10 +789,9 @@ class ProfessionalPDF(FPDF):
             
             # Ajouter la description
             if description:
-                clean_desc = description.replace('•', '-').replace('→', '->').replace('←', '<-')
                 self.set_font('Arial', 'I', 9)
                 self.set_text_color(100, 100, 100)
-                self.multi_cell(0, 5, clean_desc)
+                self.multi_cell(0, 5, description)
             
             self.ln(5)
             
