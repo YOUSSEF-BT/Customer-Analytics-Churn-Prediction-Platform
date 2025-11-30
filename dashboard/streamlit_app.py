@@ -708,12 +708,19 @@ def create_pdf_safe_plotly_figure(fig, width=800, height=400):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
             temp_path = tmpfile.name
         
-        # SOLUTION SIMPLIFIÉE : Utiliser directement plotly sans spécifier d'engine
-        pio.write_image(fig, temp_path, width=width, height=height, scale=2)
+        # SOLUTION DÉFINITIVE : Utiliser la méthode to_image de Plotly
+        img_bytes = fig.to_image(format="png", width=width, height=height, scale=2)
+        with open(temp_path, 'wb') as f:
+            f.write(img_bytes)
         return temp_path
         
     except Exception as e:
-        return None
+        # Fallback : essayer la méthode standard
+        try:
+            pio.write_image(fig, temp_path, width=width, height=height, scale=2)
+            return temp_path
+        except:
+            return None
 
 def generate_professional_pdf():
     """Génère un rapport PDF professionnel avec graphiques"""
@@ -956,24 +963,15 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Section PDF
+# Section PDF - SUPPRESSION DE TOUS LES MESSAGES
 st.markdown("""
 <div class="export-section">
     <h3 style='color: #FFFFFF; margin-bottom: 1.5rem;'>📄 RAPPORT PDF COMPLET</h3>
     <p style='color: #CCCCCC; margin-bottom: 1.5rem;'>Téléchargez un rapport détaillé avec analyse complète et recommandations</p>
 """, unsafe_allow_html=True)
 
-# SOLUTION DÉFINITIVE : Supprimer complètement la vérification Kaleido problématique
-# et utiliser une approche simplifiée qui fonctionne toujours
-
-st.markdown("""
-<div style='background: #1a2d1a; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #27AE60;'>
-    <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>📊 EXPORT PDF DISPONIBLE</h4>
-    <p style='color: #CCCCCC; margin: 0;'>
-        L'export PDF avec graphiques est disponible. Cliquez sur le bouton ci-dessous pour générer votre rapport.
-    </p>
-</div>
-""", unsafe_allow_html=True)
+# SUPPRESSION COMPLÈTE DES MESSAGES KALEIDO ET AUTRES MESSAGES
+# Section vide - aucun message affiché
 
 if st.button("🖨️ GÉNÉRER LE RAPPORT PDF AVEC GRAPHIQUES", key="generate_pdf", use_container_width=True):
     with st.spinner("📊 Génération du rapport professionnel..."):
