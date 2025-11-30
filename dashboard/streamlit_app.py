@@ -811,9 +811,6 @@ def generate_professional_pdf():
 
     pdf.output(file_path)
     return file_path
-
-
-
 # -----------------------------
 # SECTION RAPPORTS PROFESSIONNELS
 # -----------------------------
@@ -823,21 +820,23 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Section PDF - SUPPRESSION DE TOUS LES MESSAGES
+# Section PDF
 st.markdown("""
 <div class="export-section">
     <h3 style='color: #FFFFFF; margin-bottom: 1.5rem;'>📄 RAPPORT PDF COMPLET</h3>
     <p style='color: #CCCCCC; margin-bottom: 1.5rem;'>Téléchargez un rapport détaillé avec analyse complète et recommandations</p>
 """, unsafe_allow_html=True)
 
-# SUPPRESSION COMPLÈTE DES MESSAGES KALEIDO ET AUTRES MESSAGES
-# Section vide - aucun message affiché
-
 if st.button("🖨️ GÉNÉRER LE RAPPORT PDF AVEC GRAPHIQUES", key="generate_pdf", use_container_width=True):
     with st.spinner("📊 Génération du rapport professionnel..."):
-        pdf_buffer = generate_professional_pdf()
+        # Générer le PDF
+        pdf_path = generate_professional_pdf()
         
-        if pdf_buffer:
+        try:
+            # Lire le PDF en binaire
+            with open(pdf_path, "rb") as f:
+                pdf_bytes = f.read()
+            
             st.success("✅ Rapport PDF généré avec succès!")
             st.info("""
             **📋 Contenu du rapport:**
@@ -848,16 +847,17 @@ if st.button("🖨️ GÉNÉRER LE RAPPORT PDF AVEC GRAPHIQUES", key="generate_p
             - 🎯 Perspectives et objectifs mesurables
             """)
             
+            # Bouton de téléchargement correct
             st.download_button(
                 label="📥 TÉLÉCHARGER LE RAPPORT PDF COMPLET",
-                data=pdf_buffer,
+                data=pdf_bytes,
                 file_name=f"rapport_analytique_complet_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                 mime="application/pdf",
                 use_container_width=True,
                 key="pdf_download"
             )
-        else:
-            st.error("❌ Erreur lors de la génération du PDF")
+        except Exception as e:
+            st.error(f"❌ Erreur lors de l'ouverture du PDF: {e}")
 
 st.markdown("</div>", unsafe_allow_html=True)
 
