@@ -736,6 +736,7 @@ class ProfessionalPDF(FPDF):
         self.set_font(self.default_font, '', 10)
         self.set_text_color(0, 0, 0)
         fill = False
+    
         for kpi, value in data:
             self.set_fill_color(240, 240, 240) if fill else self.set_fill_color(255, 255, 255)
             self.cell(100, 6, kpi, 1, 0, 'L', fill)
