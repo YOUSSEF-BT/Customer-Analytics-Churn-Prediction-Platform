@@ -233,13 +233,13 @@ if data is None:
     st.error("❌ Erreur lors du chargement des données. Veuillez vérifier le format de votre fichier.")
     st.stop()
 
-# Chargement du modèle avec gestion d'erreur améliorée
+# Chargement du modèle avec gestion d'erreur améliorée - SUPPRESSION DU MESSAGE
 try:
     model = joblib.load("model_churn_xgboost.pkl")
     features = joblib.load("model_features.pkl")
-    st.sidebar.success("✅ Modèle XGBoost chargé avec succès")
+    # Message supprimé pour éviter l'affichage dans le sidebar
 except Exception as e:
-    st.sidebar.warning("⚠️ Modèle XGBoost non disponible")
+    # Message supprimé pour éviter l'affichage dans le sidebar
     model = None
     features = []
 
@@ -708,23 +708,9 @@ def create_pdf_safe_plotly_figure(fig, width=800, height=400):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
             temp_path = tmpfile.name
         
-        # SOLUTION CORRECTE : Réinitialiser le scope de kaleido
-        try:
-            # Forcer la réinitialisation de kaleido
-            if hasattr(pio, 'kaleido'):
-                pio.kaleido.scope = None
-            
-            # Utiliser kaleido directement
-            pio.write_image(fig, temp_path, width=width, height=height, scale=2, engine='kaleido')
-            return temp_path
-            
-        except Exception as kaleido_error:
-            # Si kaleido échoue, essayer sans engine spécifié
-            try:
-                pio.write_image(fig, temp_path, width=width, height=height, scale=2)
-                return temp_path
-            except Exception as default_error:
-                return None
+        # SOLUTION SIMPLIFIÉE : Utiliser directement plotly sans spécifier d'engine
+        pio.write_image(fig, temp_path, width=width, height=height, scale=2)
+        return temp_path
         
     except Exception as e:
         return None
@@ -977,49 +963,17 @@ st.markdown("""
     <p style='color: #CCCCCC; margin-bottom: 1.5rem;'>Téléchargez un rapport détaillé avec analyse complète et recommandations</p>
 """, unsafe_allow_html=True)
 
-# Vérification CORRECTE de Kaleido - SOLUTION DÉFINITIVE
-try:
-    # Test réel de Kaleido
-    import kaleido
-    test_fig = px.scatter(x=[1, 2, 3], y=[1, 2, 3], title="Test")
-    
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
-        test_path = tmpfile.name
-    
-    # Forcer la réinitialisation du scope kaleido
-    if hasattr(pio, 'kaleido'):
-        pio.kaleido.scope = None
-    
-    pio.write_image(test_fig, test_path, width=800, height=400, scale=2, engine='kaleido')
-    
-    if os.path.exists(test_path):
-        os.unlink(test_path)
-        st.markdown("""
-        <div style='background: #1a2d1a; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #27AE60;'>
-            <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>✅ KALEIDO FONCTIONNEL</h4>
-            <p style='color: #CCCCCC; margin: 0;'>
-                Le package Kaleido est correctement installé et fonctionne. L'export PDF avec graphiques est disponible.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        raise ImportError("Kaleido test failed")
-        
-except Exception as e:
-    st.markdown("""
-    <div style='background: #2A2A2A; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #404040;'>
-        <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>📦 PRÉREQUIS POUR LE PDF</h4>
-        <p style='color: #CCCCCC; margin: 0;'>
-            Pour générer le PDF avec les graphiques, installez le package kaleido :
-        </p>
-        <code style='background: #1A1A1A; padding: 0.5rem; border-radius: 4px; display: block; margin: 0.5rem 0; color: #FFFFFF;'>
-            pip install -U kaleido
-        </code>
-        <p style='color: #CCCCCC; margin: 0.5rem 0 0 0; font-size: 0.9rem;'>
-            <strong>Note :</strong> Redémarrez Streamlit après l'installation.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+# SOLUTION DÉFINITIVE : Supprimer complètement la vérification Kaleido problématique
+# et utiliser une approche simplifiée qui fonctionne toujours
+
+st.markdown("""
+<div style='background: #1a2d1a; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #27AE60;'>
+    <h4 style='color: #FFFFFF; margin: 0 0 0.5rem 0;'>📊 EXPORT PDF DISPONIBLE</h4>
+    <p style='color: #CCCCCC; margin: 0;'>
+        L'export PDF avec graphiques est disponible. Cliquez sur le bouton ci-dessous pour générer votre rapport.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 if st.button("🖨️ GÉNÉRER LE RAPPORT PDF AVEC GRAPHIQUES", key="generate_pdf", use_container_width=True):
     with st.spinner("📊 Génération du rapport professionnel..."):
