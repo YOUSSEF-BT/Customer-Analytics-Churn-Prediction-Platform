@@ -785,63 +785,63 @@ class ProfessionalPDF(FPDF):
         self.ln(3)
 
 # --- FONCTION MODIFIÉE (PREND LES GRAPHIQUES EN ARGUMENT) ---
+# --- FONCTION MODIFIÉE (PREND LES GRAPHIQUES EN ARGUMENT) ---
 def generate_professional_pdf(fig_churn, fig_contract, fig_tenure, fig_cluster, fig_risk_contract, fig_risk_dist, high_risk_data):
     try:
         pdf = ProfessionalPDF()
+        
+        # --- PAGE DE GARDE PROFESSIONNELLE ---
+        pdf.add_page()
+        # En-tête avec barre de couleur
+        pdf.set_fill_color(*pdf.primary_color)
+        pdf.rect(0, 0, 210, 30, 'F')
+        pdf.set_font(pdf.default_font, 'B', 16)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(0, 15, pdf.company_name, 0, 0, 'C') # Centré
+        pdf.ln(25)
 
-# --- PAGE DE GARDE PROFESSIONNELLE ---
+        # Contenu principal
+        pdf.set_y(45) # Positionner le contenu sous l'en-tête
 
-pdf.add_page()
-# En-tête avec barre de couleur
-pdf.set_fill_color(*pdf.primary_color)
-pdf.rect(0, 0, 210, 30, 'F')
-pdf.set_font(pdf.default_font, 'B', 16)
-pdf.set_text_color(255, 255, 255)
-pdf.cell(0, 15, pdf.company_name, 0, 0, 'C') # Centré
-pdf.ln(25)
+        # Titre principal
+        pdf.set_font(pdf.default_font, 'B', 28)
+        pdf.set_text_color(30, 30, 30) # Gris foncé pour le titre
+        pdf.cell(0, 15, "RAPPORT D'ANALYSE STRATEGIQUE", 0, 1, 'C')
+        pdf.ln(5)
 
-# Contenu principal
-pdf.set_y(45) # Positionner le contenu sous l'en-tête
+        # Sous-titre
+        pdf.set_font(pdf.default_font, 'I', 18)
+        pdf.set_text_color(*pdf.secondary_color) # Couleur or pour le sous-titre
+        pdf.cell(0, 10, "Customer Analytics & Churn Prediction", 0, 1, 'C')
+        pdf.ln(20)
 
-# Titre principal
-pdf.set_font(pdf.default_font, 'B', 28)
-pdf.set_text_color(30, 30, 30) # Gris foncé pour le titre
-pdf.cell(0, 15, "RAPPORT D'ANALYSE STRATEGIQUE", 0, 1, 'C')
-pdf.ln(5)
+        # Ligne de séparation
+        pdf.set_draw_color(200, 200, 200) # Gris clair
+        pdf.line(30, pdf.get_y(), 180, pdf.get_y())
+        pdf.ln(15)
 
-# Sous-titre
-pdf.set_font(pdf.default_font, 'I', 18)
-pdf.set_text_color(*pdf.secondary_color) # Couleur or pour le sous-titre
-pdf.cell(0, 10, "Customer Analytics & Churn Prediction", 0, 1, 'C')
-pdf.ln(20)
+        # Informations en deux colonnes
+        pdf.set_font(pdf.default_font, '', 12)
+        pdf.set_text_color(80, 80, 80) # Gris moyen
 
-# Ligne de séparation
-pdf.set_draw_color(200, 200, 200) # Gris clair
-pdf.line(30, pdf.get_y(), 180, pdf.get_y())
-pdf.ln(15)
+        # Colonne de gauche
+        pdf.set_x(30)
+        pdf.cell(80, 8, f"Date: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, 'L')
+        pdf.cell(80, 8, "Periode d'analyse: Q1 2023", 0, 1, 'L')
 
-# Informations en deux colonnes
-pdf.set_font(pdf.default_font, '', 12)
-pdf.set_text_color(80, 80, 80) # Gris moyen
+        # Colonne de droite
+        pdf.set_x(120)
+        pdf.set_font(pdf.default_font, 'B', 12)
+        pdf.cell(0, 8, "PREPARE POUR:", 0, 1, 'L')
+        pdf.set_font(pdf.default_font, '', 12)
+        pdf.cell(0, 8, "Direction de la Clientele", 0, 1, 'L')
+        pdf.cell(0, 8, "Departement Marketing & Ventes", 0, 1, 'L')
 
-# Colonne de gauche
-pdf.set_x(30)
-pdf.cell(80, 8, f"Date: {datetime.now().strftime('%d/%m/%Y')}", 0, 1, 'L')
-pdf.cell(80, 8, "Periode d'analyse: Q1 2023", 0, 1, 'L')
-
-# Colonne de droite
-pdf.set_x(120)
-pdf.set_font(pdf.default_font, 'B', 12)
-pdf.cell(0, 8, "PREPARE POUR:", 0, 1, 'L')
-pdf.set_font(pdf.default_font, '', 12)
-pdf.cell(0, 8, "Direction de la Clientele", 0, 1, 'L')
-pdf.cell(0, 8, "Departement Marketing & Ventes", 0, 1, 'L')
-
-# Pied de page
-pdf.set_y(260)
-pdf.set_font(pdf.default_font, 'I', 10)
-pdf.set_text_color(150, 150, 150) # Gris plus clair
-pdf.cell(0, 10, "Document confidentiel - Propriete exclusive", 0, 0, 'C')
+        # Pied de page
+        pdf.set_y(260)
+        pdf.set_font(pdf.default_font, 'I', 10)
+        pdf.set_text_color(150, 150, 150) # Gris plus clair
+        pdf.cell(0, 10, "Document confidentiel - Propriete exclusive", 0, 0, 'C')
 
         # --- CONTENU PRINCIPAL (FLUIDE) ---
         pdf.add_page()
