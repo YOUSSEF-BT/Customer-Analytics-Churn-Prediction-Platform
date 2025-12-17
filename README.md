@@ -155,7 +155,7 @@ https://customer-analytics-churn-prediction-platform-mezggcfmcjpxp7vei.streamlit
 git clone https://github.com/YOUSSEF-BT/Customer-Analytics-Churn-Prediction-Platform.git
 cd Customer-Analytics-Churn-Prediction-Platform
 pip install -r requirements.txt
-streamlit run dashboard/streamlit_ultimate.py
+streamlit run dashboard/streamlit_app.py
 ```
 
 ---
